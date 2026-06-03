@@ -1,0 +1,79 @@
+{
+  "name": "helm-desktop",
+  "version": "1.2.0",
+  "description": "HELM Desktop — the laptop-side agent host: exposes allowlisted project folders, detects installed AI coding agents, pairs with a phone via QR, and runs agent tasks on the laptop while keeping it awake.",
+  "author": "Helm",
+  "license": "MIT",
+  "private": true,
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "icon": "node scripts/make-icon.js",
+    "dist": "electron-builder --win --x64",
+    "dist:mac": "electron-builder --mac --arm64",
+    "shortcuts": "powershell -ExecutionPolicy Bypass -File scripts/make-shortcuts.ps1"
+  },
+  "build": {
+    "appId": "com.helm.app",
+    "productName": "HELM",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "!**/*.map"
+    ],
+    "npmRebuild": false,
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "portable": {
+      "artifactName": "HELM-${version}-portable.exe"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "identity": null,
+      "hardenedRuntime": false
+    },
+    "dmg": {
+      "artifactName": "HELM-${version}-arm64.dmg"
+    }
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "sharp"
+    ]
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.4",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "png-to-ico": "^2.1.8",
+    "png2icons": "^2.0.1",
+    "sharp": "^0.33.5"
+  },
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "ws": "^8.18.0"
+  }
+}

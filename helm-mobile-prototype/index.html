@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HELM Mobile — Black &amp; White Prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --bg:#0A0A0B; --surface:#131316; --surface-2:#1B1B1F;
+  --hairline:rgba(255,255,255,.08); --hairline-2:rgba(255,255,255,.14);
+  --ink-hi:#FAFAFA; --ink-mid:#A1A1A6; --ink-lo:#6B6B70; --on-fill:#0A0A0B;
+  --fill:#FFFFFF; --focus:rgba(255,255,255,.5);
+  --r-in:12px; --r-card:18px; --r-sheet:28px;
+  --ease:cubic-bezier(.22,1,.36,1);
+  --ui:'Geist',-apple-system,BlinkMacSystemFont,sans-serif;
+  --mono:'Geist Mono',ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#0c0c0e;color:var(--ink-hi);font-family:var(--ui);-webkit-font-smoothing:antialiased}
+
+/* ---- Gallery shell ---- */
+.gallery-bg{
+  min-height:100vh;
+  background:
+    radial-gradient(1200px 600px at 50% -10%, rgba(255,255,255,.04), transparent 60%),
+    #0c0c0e;
+  padding:64px 24px 96px;
+}
+.gallery-head{max-width:1240px;margin:0 auto 56px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.gallery-head h1{font-size:13px;font-weight:500;letter-spacing:.32em;text-transform:uppercase;color:var(--ink-mid);font-family:var(--mono)}
+.gallery-head .sub{font-size:13px;color:var(--ink-lo);max-width:420px;line-height:1.6}
+.gallery-head .mark{display:flex;align-items:center;gap:12px}
+.gallery-head .mark .glyph{width:34px;height:34px}
+.gallery-head .mark b{font-size:18px;font-weight:600;letter-spacing:-.02em}
+.stage{max-width:1240px;margin:0 auto;display:flex;gap:48px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.frame-wrap{display:flex;flex-direction:column;align-items:center;gap:18px}
+.frame-label{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-lo)}
+.frame-label b{color:var(--ink-mid);font-weight:500}
+
+/* ---- Phone frame ---- */
+.phone{
+  width:332px;height:718px;border-radius:54px;position:relative;
+  background:linear-gradient(180deg,#26262b,#101013);
+  padding:11px;
+  box-shadow:0 40px 90px -30px rgba(0,0,0,.85), 0 0 0 1px rgba(255,255,255,.04), inset 0 1px 0 rgba(255,255,255,.10);
+}
+.screen{
+  position:relative;width:100%;height:100%;border-radius:44px;overflow:hidden;
+  background:var(--bg);display:flex;flex-direction:column;
+}
+/* grain + top glow inside every screen */
+.screen::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:50;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");}
+.notch{position:absolute;top:9px;left:50%;transform:translateX(-50%);width:108px;height:26px;background:#000;border-radius:0 0 16px 16px;z-index:40}
+.statusbar{position:absolute;top:0;left:0;right:0;height:46px;display:flex;align-items:center;justify-content:space-between;padding:0 26px;z-index:30;font-size:12px;font-weight:600;font-family:var(--mono);color:var(--ink-hi)}
+.statusbar .dots{display:flex;gap:4px;align-items:center}
+.statusbar .dots span{display:inline-block}
+.scr-body{position:relative;flex:1;display:flex;flex-direction:column;padding:56px 26px 26px;z-index:10;overflow:hidden}
+
+/* ---- HELM mark ---- */
+.helm-glyph{display:grid;place-items:center;background:var(--fill);color:var(--on-fill);border-radius:11px;font-family:var(--mono);font-weight:500}
+.helm-glyph.lg{width:62px;height:62px;font-size:26px;border-radius:18px;box-shadow:0 10px 30px -8px rgba(255,255,255,.25)}
+
+/* ---- Buttons ---- */
+.btn{height:52px;border-radius:var(--r-in);display:flex;align-items:center;justify-content:center;gap:10px;font-family:var(--ui);font-size:15px;font-weight:500;cursor:pointer;border:1px solid transparent;width:100%;transition:transform .12s var(--ease),background .15s,border-color .15s;letter-spacing:-.01em}
+.btn:active{transform:scale(.97)}
+.btn-fill{background:var(--fill);color:var(--on-fill);font-weight:600}
+.btn-fill:hover{background:#ececec}
+.btn-ghost{background:transparent;color:var(--ink-hi);border-color:var(--hairline-2)}
+.btn-ghost:hover{background:rgba(255,255,255,.04)}
+.btn svg{width:18px;height:18px}
+
+/* ---- generic ---- */
+.h-hero{font-size:27px;font-weight:600;letter-spacing:-.03em;line-height:1.12}
+.h-title{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.muted{color:var(--ink-mid)}
+.dim{color:var(--ink-lo)}
+.mono{font-family:var(--mono)}
+.divider{display:flex;align-items:center;gap:14px;color:var(--ink-lo);font-size:12px;font-family:var(--mono);letter-spacing:.18em}
+.divider::before,.divider::after{content:"";height:1px;flex:1;background:var(--hairline)}
+
+/* breathing connection dot */
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ink-hi);position:relative}
+.dot.live::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:1px solid var(--ink-hi);animation:breathe 2.4s var(--ease) infinite}
+@keyframes breathe{0%{transform:scale(.7);opacity:.7}70%{transform:scale(1.9);opacity:0}100%{opacity:0}}
+
+/* ===== SCREEN 1 — LOGIN ===== */
+.login{justify-content:space-between;text-align:center}
+.login .top{display:flex;flex-direction:column;align-items:center;gap:22px;margin-top:42px}
+.login .brandtxt{display:flex;flex-direction:column;gap:10px;align-items:center}
+.login .brandtxt b{font-size:26px;font-weight:600;letter-spacing:.04em}
+.login .brandtxt p{font-size:15px;color:var(--ink-mid);line-height:1.5;max-width:240px}
+.login .actions{display:flex;flex-direction:column;gap:12px}
+.login .legal{font-size:11px;color:var(--ink-lo);line-height:1.6;margin-top:18px}
+.login .legal a{color:var(--ink-mid);text-decoration:none;border-bottom:1px solid var(--hairline-2)}
+.reveal{opacity:0;transform:translateY(14px);animation:rise .7s var(--ease) forwards}
+.d1{animation-delay:.05s}.d2{animation-delay:.13s}.d3{animation-delay:.21s}.d4{animation-delay:.29s}.d5{animation-delay:.37s}.d6{animation-delay:.45s}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ===== SCREEN 2 — SCAN ===== */
+.scan .head{margin-bottom:22px}
+.scan .head h2{margin-top:14px}
+.scan .head p{margin-top:8px;font-size:14px;color:var(--ink-mid);line-height:1.5}
+.viewport{position:relative;width:100%;aspect-ratio:1/1;border-radius:24px;overflow:hidden;background:
+  repeating-linear-gradient(135deg,#0e0e10,#0e0e10 14px,#121215 14px,#121215 28px);border:1px solid var(--hairline)}
+.viewport .vgrad{position:absolute;inset:0;background:radial-gradient(120% 80% at 50% 0,rgba(255,255,255,.06),transparent 55%)}
+.bracket{position:absolute;width:38px;height:38px;border:2px solid var(--ink-hi)}
+.bracket.tl{top:26px;left:26px;border-right:0;border-bottom:0;border-radius:8px 0 0 0}
+.bracket.tr{top:26px;right:26px;border-left:0;border-bottom:0;border-radius:0 8px 0 0}
+.bracket.bl{bottom:26px;left:26px;border-right:0;border-top:0;border-radius:0 0 0 8px}
+.bracket.br{bottom:26px;right:26px;border-left:0;border-top:0;border-radius:0 0 8px 0}
+.scanline{position:absolute;left:26px;right:26px;height:2px;background:linear-gradient(90deg,transparent,var(--ink-hi),transparent);box-shadow:0 0 14px rgba(255,255,255,.5);animation:scan 2.6s var(--ease) infinite}
+@keyframes scan{0%,100%{top:30px;opacity:.2}50%{top:calc(100% - 30px);opacity:1}}
+.coderow{display:flex;gap:8px;justify-content:center;margin:4px 0}
+.codecell{flex:1;height:54px;border:1px solid var(--hairline-2);border-radius:var(--r-in);background:var(--surface-2);display:grid;place-items:center;font-family:var(--mono);font-size:22px;font-weight:500;color:var(--ink-hi)}
+.codecell.empty{color:var(--ink-lo)}
+.codecell.sep{flex:0 0 14px;border:0;background:transparent;color:var(--ink-lo)}
+.reassure{display:flex;align-items:center;gap:10px;justify-content:center;color:var(--ink-lo);font-size:11.5px;line-height:1.4;margin-top:18px;text-align:center}
+.reassure svg{width:14px;height:14px;flex:none}
+
+/* ===== SCREEN 3 — DASHBOARD ===== */
+.dash{padding:0;display:flex;flex-direction:column}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 22px 14px;border-bottom:1px solid var(--hairline);position:relative}
+.topbar .left{display:flex;align-items:center;gap:11px}
+.topbar .helm-glyph{width:30px;height:30px;font-size:14px;border-radius:9px}
+.pill{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--ink-mid);font-family:var(--mono);background:var(--surface);border:1px solid var(--hairline);padding:6px 11px;border-radius:999px}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(145deg,#2a2a30,#444);display:grid;place-items:center;font-size:12px;font-weight:600;color:var(--ink-hi);cursor:pointer;border:1px solid var(--hairline-2)}
+.tab-body{flex:1;overflow:hidden;padding:22px 22px 12px;display:flex;flex-direction:column}
+.tab-body h3.section{font-size:21px;font-weight:600;letter-spacing:-.02em;margin-bottom:4px}
+.tab-body .section-sub{font-size:13px;color:var(--ink-lo);margin-bottom:18px}
+.cards{display:flex;flex-direction:column;gap:11px}
+.card{background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-card);padding:15px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:transform .14s var(--ease),border-color .15s,background .15s;animation:rise .55s var(--ease) backwards}
+.card:hover{border-color:var(--hairline-2);background:#16161a}
+.card:active{transform:scale(.985)}
+.card .ic{width:38px;height:38px;border-radius:11px;background:var(--surface-2);border:1px solid var(--hairline);display:grid;place-items:center;flex:none;color:var(--ink-mid)}
+.card .ic svg{width:18px;height:18px}
+.card .meta{flex:1;min-width:0}
+.card .meta .nm{font-size:15px;font-weight:600;letter-spacing:-.01em;display:flex;align-items:center;gap:8px}
+.card .meta .pth{font-family:var(--mono);font-size:11.5px;color:var(--ink-mid);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card .meta .st{font-size:11px;color:var(--ink-lo);margin-top:6px;display:flex;align-items:center;gap:6px}
+.card .chev{color:var(--ink-lo);flex:none}
+.tag{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:3px 7px;border-radius:6px;border:1px solid var(--hairline-2);color:var(--ink-mid)}
+.tag.off{color:var(--ink-lo);border-style:dashed}
+.tag.on{color:var(--on-fill);background:var(--fill);border-color:var(--fill)}
+.ghost-row{margin-top:13px;height:50px;border:1px dashed var(--hairline-2);border-radius:var(--r-card);display:flex;align-items:center;justify-content:center;gap:9px;color:var(--ink-mid);font-size:13.5px;cursor:pointer;transition:.15s}
+.ghost-row:hover{background:rgba(255,255,255,.03);color:var(--ink-hi)}
+.ghost-row svg{width:15px;height:15px}
+
+/* agent rows (selectable) */
+.agent-row .ic{border-radius:11px}
+.agent-row.sel{border-color:var(--ink-hi);background:#1a1a1e}
+.agent-row.disabled{opacity:.42;pointer-events:none}
+.agent-row .desc{font-size:12px;color:var(--ink-lo);margin-top:3px;line-height:1.35;white-space:normal}
+
+/* settings / account list */
+.list{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--hairline);border-radius:var(--r-card);overflow:hidden}
+.list .row{display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer;transition:background .15s}
+.list .row+.row{border-top:1px solid var(--hairline)}
+.list .row:hover{background:#16161a}
+.list .row .ic{width:30px;height:30px;display:grid;place-items:center;color:var(--ink-mid);flex:none}
+.list .row .ic svg{width:17px;height:17px}
+.list .row .lab{flex:1;font-size:14.5px}
+.list .row .val{font-size:12.5px;color:var(--ink-lo);font-family:var(--mono)}
+.list .row .chev{color:var(--ink-lo)}
+.switch{width:40px;height:24px;border-radius:999px;background:var(--surface-2);border:1px solid var(--hairline-2);position:relative;flex:none}
+.switch.on{background:var(--fill)}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:var(--ink-mid);transition:.18s var(--ease)}
+.switch.on::after{left:18px;background:var(--on-fill)}
+
+.account-hero{display:flex;flex-direction:column;align-items:center;text-align:center;gap:12px;margin-bottom:22px}
+.account-hero .av-lg{width:72px;height:72px;border-radius:50%;background:linear-gradient(145deg,#2a2a30,#4a4a52);display:grid;place-items:center;font-size:26px;font-weight:600;border:1px solid var(--hairline-2)}
+.account-hero .nm{font-size:19px;font-weight:600;letter-spacing:-.02em}
+.account-hero .em{font-size:13px;color:var(--ink-mid);font-family:var(--mono)}
+
+/* bottom tab bar */
+.tabbar{display:flex;border-top:1px solid var(--hairline);background:rgba(10,10,11,.7);backdrop-filter:blur(12px);padding:8px 8px calc(8px + env(safe-area-inset-bottom))}
+.tabbar .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;padding:7px 0;color:var(--ink-lo);cursor:pointer;font-size:10.5px;letter-spacing:.02em;transition:color .15s;background:none;border:0;font-family:var(--ui)}
+.tabbar .tab svg{width:21px;height:21px}
+.tabbar .tab.active{color:var(--ink-hi)}
+.tabpane{display:none;flex:1;flex-direction:column;overflow:hidden;animation:rise .4s var(--ease)}
+.tabpane.active{display:flex}
+
+/* scroll area */
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+
+/* ===== SCREEN 4 — TASK / CONSOLE / RESULT ===== */
+.task{padding-top:46px;flex:1;display:flex;flex-direction:column}
+.task-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 20px;border-bottom:1px solid var(--hairline)}
+.task-head .crumb{font-family:var(--mono);font-size:12px;color:var(--ink-mid);display:flex;align-items:center;gap:7px}
+.task-head .crumb b{color:var(--ink-hi);font-weight:500}
+.statusbadge{display:flex;align-items:center;gap:7px;font-size:11.5px;font-family:var(--mono);color:var(--ink-mid);background:var(--surface);border:1px solid var(--hairline);padding:6px 11px;border-radius:999px;white-space:nowrap}
+.taskpane{display:none;flex:1;flex-direction:column;padding:18px 20px 20px;overflow:hidden}
+.taskpane.active{display:flex;animation:rise .4s var(--ease)}
+.taskbox{flex:1;background:var(--surface-2);border:1px solid var(--hairline-2);border-radius:var(--r-card);padding:16px;font-size:15px;line-height:1.55;color:var(--ink-hi);min-height:150px}
+.task-hint{font-size:12px;color:var(--ink-lo);margin:14px 2px;display:flex;align-items:flex-start;gap:8px;line-height:1.4}
+.task-hint svg{width:14px;height:14px;flex:none;margin-top:1px}
+.summary-chip{background:var(--surface);border:1px solid var(--hairline);border-radius:12px;padding:11px 13px;font-size:13px;color:var(--ink-mid);display:flex;gap:9px;align-items:flex-start;margin-bottom:14px;line-height:1.4}
+.summary-chip svg{width:15px;height:15px;flex:none;margin-top:2px;color:var(--ink-lo)}
+.console{flex:1;position:relative;background:#08080A;border:1px solid var(--hairline);border-radius:var(--r-card);overflow:hidden;display:flex;flex-direction:column}
+.console::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;z-index:5;background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);background-size:50% 100%;animation:shimmer 1.8s linear infinite}
+@keyframes shimmer{0%{background-position:-60% 0}100%{background-position:160% 0}}
+.console .lines{flex:1;overflow-y:auto;padding:14px;font-family:var(--mono);font-size:11.5px;line-height:1.75}
+.console .lines::-webkit-scrollbar{width:0}
+.cline{opacity:0;transform:translateY(6px);color:var(--ink-mid);white-space:pre-wrap;word-break:break-word}
+.cline.show{animation:rise .28s var(--ease) forwards}
+.cline .ok{color:var(--ink-hi)}
+.cline .mut{color:var(--ink-lo)}
+.cancel-btn{margin-top:13px;border-color:var(--hairline-2)!important}
+.ring{width:15px;height:15px}
+.ring circle{fill:none;stroke-width:2.6}
+.ring .bg{stroke:var(--hairline-2)}
+.ring .fg{stroke:var(--ink-hi);stroke-linecap:round;stroke-dasharray:34;stroke-dashoffset:14;transform-origin:center;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.done-banner{display:flex;flex-direction:column;align-items:center;text-align:center;gap:11px;padding:26px 0 20px}
+.done-check{width:60px;height:60px;border-radius:50%;background:var(--fill);color:var(--on-fill);display:grid;place-items:center;animation:pop .5s var(--ease) backwards}
+.done-check svg{width:28px;height:28px}
+@keyframes pop{0%{transform:scale(.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+.done-banner h3{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.done-banner p{font-size:13px;color:var(--ink-mid)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:4px 0 16px}
+.stat{background:var(--surface);border:1px solid var(--hairline);border-radius:14px;padding:14px 6px;text-align:center}
+.stat .num{font-family:var(--mono);font-size:21px;font-weight:500;letter-spacing:-.02em}
+.stat .lbl{font-size:9.5px;color:var(--ink-lo);text-transform:uppercase;letter-spacing:.09em;margin-top:5px}
+.modeswitch{display:inline-flex;margin-left:10px;border:1px solid var(--hairline-2);border-radius:999px;overflow:hidden;vertical-align:middle}
+.modeswitch button{background:transparent;border:0;color:var(--ink-lo);font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:5px 10px;cursor:pointer;transition:.15s}
+.modeswitch button.on{background:var(--fill);color:var(--on-fill)}
+
+/* ===== SCREEN 5 — OFFLINE / UNREACHABLE ===== */
+.offline{justify-content:center;align-items:center;text-align:center;padding:0 34px}
+.deadorb{width:84px;height:84px;border-radius:50%;border:2px solid var(--hairline-2);display:grid;place-items:center;margin-bottom:28px;color:var(--ink-lo)}
+.deadorb svg{width:32px;height:32px}
+.offline h2{font-size:24px;font-weight:600;letter-spacing:-.02em;margin-bottom:10px}
+.offline p{font-size:14px;color:var(--ink-mid);line-height:1.55;margin-bottom:26px;max-width:248px}
+.offline .btn{margin-bottom:14px}
+.offline .ghostlink{font-size:13px;color:var(--ink-mid);background:none;border:0;cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--hairline-2)}
+.reconnect-bar{position:absolute;top:54px;left:14px;right:14px;z-index:35;background:rgba(20,20,24,.92);backdrop-filter:blur(10px);border:1px solid var(--hairline-2);border-radius:12px;padding:10px 13px;display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-mid);overflow:hidden}
+.reconnect-bar .ring{flex:none}
+.reconnect-bar::after{content:"";position:absolute;bottom:0;height:2px;width:40%;background:linear-gradient(90deg,transparent,var(--ink-hi),transparent);animation:sweep 1.5s var(--ease) infinite}
+@keyframes sweep{0%{left:-40%}100%{left:100%}}
+
+@media (max-width:760px){
+  .gallery-bg{padding:36px 12px 64px}
+  .stage{gap:36px}
+}
+</style>
+</head>
+<body>
+<div class="gallery-bg">
+  <div class="gallery-head">
+    <div>
+      <h1>HELM · Mobile</h1>
+      <p class="sub">Black &amp; white prototype — direct the AI agents on your laptop, from your phone. Three core screens, dark monochrome.</p>
+    </div>
+    <div class="mark">
+      <div class="helm-glyph" style="width:34px;height:34px;font-size:15px;border-radius:10px">&gt;_</div>
+      <b>HELM</b>
+    </div>
+  </div>
+
+  <div class="stage">
+
+    <!-- ============ SCREEN 1 · LOGIN ============ -->
+    <div class="frame-wrap">
+      <div class="phone"><div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="dots mono">●●● ⌁ ▮</span></div>
+        <div class="scr-body login">
+          <div class="top">
+            <div class="helm-glyph lg reveal d1">&gt;_</div>
+            <div class="brandtxt">
+              <b class="reveal d2">HELM</b>
+              <p class="reveal d3">Direct the AI agents on your laptop — from anywhere.</p>
+            </div>
+          </div>
+          <div>
+            <div class="actions">
+              <button class="btn btn-fill reveal d3">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.36 12.7c0-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.47.83-.72 0-1.82-.81-3-.79-1.54.02-2.96.9-3.75 2.28-1.6 2.78-.41 6.9 1.15 9.16.76 1.1 1.67 2.35 2.86 2.3 1.15-.04 1.58-.74 2.97-.74 1.38 0 1.77.74 2.98.72 1.23-.02 2.01-1.12 2.76-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.4-.92-2.42-3.65zM14.13 5.3c.63-.77 1.06-1.83.94-2.9-.91.04-2.02.61-2.67 1.37-.58.67-1.09 1.75-.95 2.78 1.02.08 2.05-.52 2.68-1.25z"/></svg>
+                Continue with Apple
+              </button>
+              <button class="btn btn-ghost reveal d4">
+                <svg viewBox="0 0 24 24"><path fill="currentColor" d="M21.35 11.1H12v3.2h5.35c-.23 1.4-1.64 4.1-5.35 4.1-3.22 0-5.85-2.66-5.85-5.95S8.78 6.5 12 6.5c1.83 0 3.06.78 3.76 1.45l2.56-2.47C16.78 3.9 14.6 3 12 3 6.98 3 2.9 7.03 2.9 12s4.08 9 9.1 9c5.25 0 8.73-3.69 8.73-8.89 0-.6-.07-1.05-.16-1.51z"/></svg>
+                Continue with Google
+              </button>
+              <div class="divider reveal d5">OR</div>
+              <button class="btn btn-ghost reveal d5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 5 8-5"/></svg>
+                Continue with email
+              </button>
+            </div>
+            <p class="legal reveal d6">By continuing you agree to HELM's<br/><a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+          </div>
+        </div>
+      </div></div>
+      <div class="frame-label"><b>01</b> · Welcome / Login</div>
+    </div>
+
+    <!-- ============ SCREEN 2 · SCAN ============ -->
+    <div class="frame-wrap">
+      <div class="phone"><div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="dots mono">●●● ⌁ ▮</span></div>
+        <div class="scr-body scan">
+          <div class="head">
+            <div class="dim mono" style="font-size:12px;letter-spacing:.04em">← &nbsp;PAIRING</div>
+            <h2 class="h-hero">Pair with your laptop.</h2>
+            <p>Point your camera at the code shown in HELM Desktop on your laptop.</p>
+          </div>
+          <div class="viewport">
+            <div class="vgrad"></div>
+            <div class="bracket tl"></div><div class="bracket tr"></div>
+            <div class="bracket bl"></div><div class="bracket br"></div>
+            <div class="scanline"></div>
+          </div>
+          <div style="margin:22px 0 14px" class="divider">OR ENTER CODE</div>
+          <div class="coderow">
+            <div class="codecell">4</div>
+            <div class="codecell">7</div>
+            <div class="codecell">2</div>
+            <div class="codecell sep">–</div>
+            <div class="codecell">9</div>
+            <div class="codecell empty">0</div>
+            <div class="codecell empty">0</div>
+          </div>
+          <div style="flex:1"></div>
+          <button class="btn btn-fill">Pair device</button>
+          <div class="reassure">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            No code or credentials ever leave your laptop · TLS encrypted.
+          </div>
+        </div>
+      </div></div>
+      <div class="frame-label"><b>02</b> · Scan device</div>
+    </div>
+
+    <!-- ============ SCREEN 3 · DASHBOARD ============ -->
+    <div class="frame-wrap">
+      <div class="phone"><div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="dots mono">●●● ⌁ ▮</span></div>
+        <div class="dash" style="padding-top:46px;flex:1;display:flex;flex-direction:column">
+          <div class="topbar">
+            <div class="left">
+              <div class="helm-glyph">&gt;_</div>
+              <span class="pill"><span class="dot live"></span>Connected</span>
+            </div>
+            <div class="avatar" data-go="account">VS</div>
+          </div>
+
+          <!-- PROJECTS -->
+          <div class="tabpane active" id="pane-projects">
+            <div class="tab-body">
+              <h3 class="section">Projects</h3>
+              <div class="section-sub mono">3 directories authorized</div>
+              <div class="scroll">
+                <div class="cards">
+                  <div class="card" style="animation-delay:.04s">
+                    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+                    <div class="meta"><div class="nm">TermWork</div><div class="pth">~/Projects/TermWork</div><div class="st"><span class="dot"></span>active 5m ago</div></div>
+                    <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg>
+                  </div>
+                  <div class="card" style="animation-delay:.10s">
+                    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+                    <div class="meta"><div class="nm">AutonomousAgent</div><div class="pth">~/Dev/AutonomousAgent</div><div class="st"><span class="dot"></span>active 2h ago</div></div>
+                    <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg>
+                  </div>
+                  <div class="card" style="animation-delay:.16s">
+                    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+                    <div class="meta"><div class="nm">helm-configs</div><div class="pth">/usr/local/helm/configs</div><div class="st"><span class="dot" style="opacity:.5"></span>idle · system core</div></div>
+                    <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg>
+                  </div>
+                </div>
+                <div class="ghost-row">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+                  Authorize a directory
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- AGENTS -->
+          <div class="tabpane" id="pane-agents">
+            <div class="tab-body">
+              <h3 class="section">Agents</h3>
+              <div class="section-sub mono">detected on this laptop</div>
+              <div class="scroll">
+                <div class="cards">
+                  <div class="card agent-row sel">
+                    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg></div>
+                    <div class="meta"><div class="nm">Claude Code <span class="tag on">Selected</span></div><div class="desc">Conversational, file-editing agent. Best for multi-step work.</div></div>
+                  </div>
+                  <div class="card agent-row">
+                    <div class="ic mono" style="font-size:15px;color:var(--ink-mid)">&lt;/&gt;</div>
+                    <div class="meta"><div class="nm">Codex CLI <span class="tag">v1.4</span></div><div class="desc">Direct code-completion daemon. Fast, focused edits.</div></div>
+                  </div>
+                  <div class="card agent-row disabled">
+                    <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M7 12h10"/></svg></div>
+                    <div class="meta"><div class="nm">Antigravity CLI <span class="tag off">Not installed</span></div><div class="desc">Local tool assistant. Install on your laptop to enable.</div></div>
+                  </div>
+                </div>
+                <button class="btn btn-fill" style="margin-top:16px">Pair agent</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- SETTINGS -->
+          <div class="tabpane" id="pane-settings">
+            <div class="tab-body">
+              <h3 class="section">Settings</h3>
+              <div class="section-sub mono">app &amp; connection</div>
+              <div class="scroll">
+                <div class="list" style="margin-bottom:14px">
+                  <div class="row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div><div class="lab">Appearance</div><div class="val">Dark</div><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg></div>
+                  <div class="row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div><div class="lab">Notifications</div><div class="switch on"></div></div>
+                  <div class="row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 1v6M12 17v6M4.2 4.2l4.3 4.3M15.5 15.5l4.3 4.3"/></svg></div><div class="lab">Keep laptop awake</div><div class="switch on"></div></div>
+                </div>
+                <div class="list">
+                  <div class="row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div><div class="lab">Paired laptop</div><div class="val">MacBook</div><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg></div>
+                  <div class="row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6 6 18M6 6l12 12"/></svg></div><div class="lab" style="color:var(--ink-mid)">Unpair this device</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ACCOUNT -->
+          <div class="tabpane" id="pane-account">
+            <div class="tab-body">
+              <div class="scroll">
+                <div class="account-hero" style="margin-top:8px">
+                  <div class="av-lg">VS</div>
+                  <div><div class="nm">Vishal S.</div><div class="em">vishalxstack@gmail.com</div></div>
+                </div>
+                <div class="list" style="margin-bottom:14px">
+                  <div class="row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 4 7v6c0 5 3.5 7.5 8 9 4.5-1.5 8-4 8-9V7z"/></svg></div><div class="lab">Plan</div><div class="val">Pro</div><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg></div>
+                  <div class="row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div><div class="lab">Manage account</div><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg></div>
+                  <div class="row"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 12h12M17 8l4 4-4 4M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"/></svg></div><div class="lab">Help &amp; support</div><svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg></div>
+                </div>
+                <button class="btn btn-ghost" style="border-color:var(--hairline-2)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M15 12H3M7 8l-4 4 4 4M11 4h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/></svg>
+                  Log out
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB BAR -->
+          <div class="tabbar">
+            <button class="tab active" data-tab="projects">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              Projects
+            </button>
+            <button class="tab" data-tab="agents">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg>
+              Agents
+            </button>
+            <button class="tab" data-tab="settings">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.4-2.5H9.5L9 5.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4L5 11a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.5 2.5h4l.4-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.6a7 7 0 0 0 .1-1z"/></svg>
+              Settings
+            </button>
+            <button class="tab" data-tab="account">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+              Account
+            </button>
+          </div>
+        </div>
+      </div></div>
+      <div class="frame-label"><b>03</b> · Dashboard &nbsp;<span style="color:var(--ink-lo)">(tap the tabs)</span></div>
+    </div>
+
+    <!-- ============ SCREEN 4 · TASK / CONSOLE / RESULT ============ -->
+    <div class="frame-wrap">
+      <div class="phone"><div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="dots mono">●●● ⌁ ▮</span></div>
+        <div class="task" id="taskRoot">
+          <div class="task-head">
+            <div class="crumb">TermWork <span style="color:var(--ink-lo)">/</span> <b>Claude&nbsp;Code</b></div>
+            <div class="statusbadge" id="taskStatus"><span class="dot"></span>Ready</div>
+          </div>
+
+          <!-- INPUT -->
+          <div class="taskpane active" id="task-input">
+            <div class="taskbox">Refactor the auth module to use the new token service, and add tests for the edge cases.</div>
+            <div class="task-hint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+              The agent runs in this repo on your laptop — output streams back here.
+            </div>
+            <button class="btn btn-fill" onclick="helmTask('running')">Run agent</button>
+          </div>
+
+          <!-- RUNNING -->
+          <div class="taskpane" id="task-running">
+            <div class="summary-chip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+              Refactor the auth module to use the new token service, and add tests…
+            </div>
+            <div class="console">
+              <div class="lines" id="consoleLines"></div>
+            </div>
+            <button class="btn btn-ghost cancel-btn" onclick="helmTask('input')">Cancel task</button>
+          </div>
+
+          <!-- DONE -->
+          <div class="taskpane" id="task-done">
+            <div class="done-banner">
+              <div class="done-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m5 13 4 4 10-12"/></svg></div>
+              <h3>Task completed</h3>
+              <p>Claude Code finished in the TermWork repo.</p>
+            </div>
+            <div class="stats">
+              <div class="stat"><div class="num" data-to="142">0</div><div class="lbl">lines</div></div>
+              <div class="stat"><div class="num" data-to="7">0</div><div class="lbl">files</div></div>
+              <div class="stat"><div class="num">1:48</div><div class="lbl">elapsed</div></div>
+            </div>
+            <div style="flex:1"></div>
+            <button class="btn btn-fill" onclick="helmTask('input')">Start new task</button>
+          </div>
+        </div>
+      </div></div>
+      <div class="frame-label"><b>04</b> · Task → Console → Result
+        <span class="modeswitch" id="taskModes">
+          <button data-mode="input" class="on">Input</button>
+          <button data-mode="running">Running</button>
+          <button data-mode="done">Result</button>
+        </span>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN 5 · OFFLINE / UNREACHABLE ============ -->
+    <div class="frame-wrap">
+      <div class="phone"><div class="screen">
+        <div class="notch"></div>
+        <div class="statusbar"><span>9:41</span><span class="dots mono">●●● ⌁ ▮</span></div>
+        <div class="reconnect-bar">
+          <svg class="ring" viewBox="0 0 24 24"><circle class="bg" cx="12" cy="12" r="9"/><circle class="fg" cx="12" cy="12" r="9"/></svg>
+          Reconnecting to your laptop…
+        </div>
+        <div class="scr-body offline">
+          <div class="deadorb">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4l20 16M5 12.5a11 11 0 0 1 4-2.3M2 8.8a16 16 0 0 1 4.5-2.7M12 19h.01M8.5 15.6a6 6 0 0 1 5-1"/></svg>
+          </div>
+          <h2>Laptop unreachable</h2>
+          <p>We can't reach your laptop right now. It may be asleep or offline.</p>
+          <button class="btn btn-fill" onclick="helmRetry(this)">Try again</button>
+          <button class="ghostlink">Pairing details</button>
+        </div>
+      </div></div>
+      <div class="frame-label"><b>05</b> · Offline · the never-blank state</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  var dash = document.querySelector('.dash');
+  function activate(name){
+    dash.querySelectorAll('.tabpane').forEach(function(p){p.classList.toggle('active', p.id==='pane-'+name);});
+    dash.querySelectorAll('.tabbar .tab').forEach(function(t){t.classList.toggle('active', t.dataset.tab===name);});
+  }
+  dash.querySelectorAll('.tabbar .tab').forEach(function(t){
+    t.addEventListener('click', function(){ activate(t.dataset.tab); });
+  });
+  dash.querySelector('.avatar').addEventListener('click', function(){ activate('account'); });
+
+  // agent selection toggle
+  dash.querySelectorAll('.agent-row:not(.disabled)').forEach(function(row){
+    row.addEventListener('click', function(){
+      dash.querySelectorAll('.agent-row').forEach(function(r){
+        r.classList.remove('sel');
+        var tag = r.querySelector('.tag.on'); if(tag){ tag.className='tag'; tag.textContent = r.querySelector('.nm').textContent.indexOf('Codex')>-1?'v1.4':''; }
+      });
+      row.classList.add('sel');
+    });
+  });
+
+  // settings switches
+  dash.querySelectorAll('.switch').forEach(function(s){
+    s.addEventListener('click', function(){ s.classList.toggle('on'); });
+  });
+})();
+
+/* ---- Screen 4: task flow ---- */
+var CONSOLE = [
+  ['$ claude-code run --task refactor-auth',''],
+  ['Analyzing repository · 218 files indexed','mut'],
+  ['Reading src/auth/token.js',''],
+  ['Planning changes across 7 files','mut'],
+  ['✓ Replaced legacy auth with TokenService','ok'],
+  ['✓ Updated 5 call sites','ok'],
+  ['Writing tests · auth.edge.test.js',''],
+  ['✓ 14 tests passing','ok'],
+  ['Completed in 1m 48s','mut']
+];
+var streamTimer=null;
+function streamConsole(){
+  var box=document.getElementById('consoleLines');
+  if(!box) return;
+  box.innerHTML='';
+  if(streamTimer) clearInterval(streamTimer);
+  var i=0;
+  streamTimer=setInterval(function(){
+    if(i>=CONSOLE.length){clearInterval(streamTimer);return;}
+    var el=document.createElement('div');
+    el.className='cline show';
+    var t=CONSOLE[i][0], cls=CONSOLE[i][1];
+    el.innerHTML = cls ? '<span class="'+cls+'">'+t+'</span>' : t;
+    box.appendChild(el);
+    box.scrollTop=box.scrollHeight;
+    i++;
+  }, 260);
+}
+var RING='<svg class="ring" viewBox="0 0 24 24"><circle class="bg" cx="12" cy="12" r="9"/><circle class="fg" cx="12" cy="12" r="9"/></svg>';
+var CHECK='<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink-hi)" stroke-width="2.6"><path d="m5 13 4 4 10-12"/></svg>';
+function rollNum(el){
+  var to=parseInt(el.getAttribute('data-to'),10), start=performance.now();
+  function step(now){var p=Math.min((now-start)/650,1);el.textContent=Math.round(p*to);if(p<1)requestAnimationFrame(step);}
+  requestAnimationFrame(step);
+}
+window.helmTask=function(mode){
+  var root=document.getElementById('taskRoot');
+  root.querySelectorAll('.taskpane').forEach(function(p){p.classList.toggle('active', p.id==='task-'+mode);});
+  document.querySelectorAll('#taskModes button').forEach(function(b){b.classList.toggle('on', b.dataset.mode===mode);});
+  var s=document.getElementById('taskStatus');
+  if(mode==='input'){ s.innerHTML='<span class="dot"></span>Ready'; }
+  else if(mode==='running'){ s.innerHTML=RING+'Running'; streamConsole(); }
+  else if(mode==='done'){ s.innerHTML=CHECK+'Done'; document.querySelectorAll('#task-done .num[data-to]').forEach(rollNum); }
+};
+document.querySelectorAll('#taskModes button').forEach(function(b){
+  b.addEventListener('click', function(){ helmTask(b.dataset.mode); });
+});
+
+/* ---- Screen 5: retry ---- */
+window.helmRetry=function(btn){
+  var orig=btn.innerHTML;
+  btn.innerHTML=RING.replace('class="ring"','class="ring" style="filter:invert(1)"')+' Trying…';
+  btn.style.pointerEvents='none';
+  setTimeout(function(){ btn.innerHTML=orig; btn.style.pointerEvents=''; }, 1800);
+};
+</script>
+</body>
+</html>

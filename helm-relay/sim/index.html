@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>HELM — phone simulator</title>
+  <style>
+    :root { --bg:#0f1115; --panel:#171a21; --line:#262b35; --ink:#e7e9ee; --dim:#8b93a3;
+            --accent:#5b8cff; --ok:#46c08a; --warn:#e0a33a; --err:#e06a5a; }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink);
+           font:14px/1.5 ui-monospace,"Cascadia Mono",Consolas,monospace; }
+    .wrap { max-width:520px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; }
+    header { padding:14px 16px; border-bottom:1px solid var(--line);
+             display:flex; align-items:center; gap:10px; }
+    header h1 { font-size:15px; margin:0; letter-spacing:.04em; }
+    .dot { width:9px; height:9px; border-radius:50%; background:var(--dim); }
+    .dot.on { background:var(--ok); } .dot.off { background:var(--err); }
+    .dot.wait { background:var(--warn); }
+    .conn { margin-left:auto; font-size:12px; color:var(--dim); }
+    main { padding:16px; display:flex; flex-direction:column; gap:16px; flex:1; }
+    .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; }
+    label { display:block; font-size:11px; color:var(--dim); text-transform:uppercase;
+            letter-spacing:.08em; margin-bottom:6px; }
+    input, textarea, select, button {
+      font:inherit; color:var(--ink); background:#0c0e12; border:1px solid var(--line);
+      border-radius:8px; padding:9px 11px; width:100%; }
+    textarea { resize:vertical; min-height:64px; }
+    button { background:var(--accent); border:none; color:#fff; cursor:pointer; font-weight:600; }
+    button.ghost { background:transparent; border:1px solid var(--line); color:var(--ink); }
+    button:disabled { opacity:.45; cursor:not-allowed; }
+    .row { display:flex; gap:8px; } .row > * { flex:1; }
+    .pill { display:inline-block; padding:6px 10px; margin:0 6px 6px 0; border-radius:999px;
+            border:1px solid var(--line); cursor:pointer; font-size:13px; background:#0c0e12; }
+    .pill.sel { border-color:var(--accent); color:#fff; background:#1b2740; }
+    h2 { font-size:12px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em;
+         margin:0 0 8px; }
+    #log { background:#0a0c10; border:1px solid var(--line); border-radius:8px; padding:10px;
+           white-space:pre-wrap; word-break:break-word; min-height:120px; max-height:42vh;
+           overflow:auto; font-size:13px; }
+    .muted { color:var(--dim); } .ok { color:var(--ok); } .err { color:var(--err); }
+    .hide { display:none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <span id="cdot" class="dot off"></span>
+      <h1>HELM · phone sim</h1>
+      <span id="conn" class="conn">disconnected</span>
+    </header>
+    <main>
+      <div class="panel">
+        <label for="token">Pairing token (from the desktop window)</label>
+        <div class="row">
+          <input id="token" placeholder="paste token…" autocomplete="off" spellcheck="false" />
+          <button id="connect" style="flex:0 0 auto; width:auto; padding:9px 16px;">Connect</button>
+        </div>
+        <p class="muted" id="hint" style="margin:8px 0 0; font-size:12px;">
+          Or open <code>/sim?token=YOUR_TOKEN</code>. The relay URL is this page's origin.
+        </p>
+      </div>
+
+      <div class="panel" id="catalogPanel">
+        <div class="row" style="align-items:center;">
+          <h2 style="margin:0;">Projects</h2>
+          <button id="refresh" class="ghost" style="flex:0 0 auto; width:auto; padding:7px 12px;">Refresh</button>
+        </div>
+        <div id="projects" class="muted">— connect, then Refresh —</div>
+        <h2 style="margin-top:14px;">Agent</h2>
+        <div id="agents" class="muted">—</div>
+        <label for="task" style="margin-top:14px;">Task</label>
+        <textarea id="task" placeholder="e.g. list the files and summarize the README"></textarea>
+        <button id="send" style="margin-top:10px;" disabled>Send task</button>
+      </div>
+
+      <div class="panel">
+        <h2>Output</h2>
+        <div id="log" class="muted">—</div>
+      </div>
+    </main>
+  </div>
+  <script src="/sim/sim.js"></script>
+</body>
+</html>

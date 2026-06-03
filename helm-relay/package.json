@@ -1,0 +1,16 @@
+{
+  "name": "helm-relay",
+  "version": "1.0.0",
+  "description": "HELM Relay — a dumb WebSocket router that forwards messages between a paired laptop (host) and phone (client). No business logic, no storage of user data.",
+  "license": "MIT",
+  "private": true,
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

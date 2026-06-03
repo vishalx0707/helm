@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "HELM",
+    "slug": "helm-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "helm",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0A0A0B",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#0A0A0B",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "HELM uses the camera to scan the pairing QR code shown by HELM Desktop on your laptop."
+      }
+    },
+    "android": {
+      "edgeToEdgeEnabled": true,
+      "permissions": ["android.permission.CAMERA"]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "HELM uses the camera to scan the pairing QR code shown by HELM Desktop on your laptop."
+        }
+      ],
+      "expo-secure-store"
+    ]
+  }
+}

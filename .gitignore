@@ -1,0 +1,21 @@
+# dependencies & build output
+node_modules/
+release/
+
+# logs & shell/terminal history dumps
+*.log
+*history*
+
+# secrets & key material (never commit)
+.env*
+*.key
+*.pem
+*.pfx
+*.p12
+
+# local agent / tooling config (machine-specific)
+.claude/
+.playwright-mcp/
+
+# isolated experimental work (removable without breaking core)
+/experimental/private/
