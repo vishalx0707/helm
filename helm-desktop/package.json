@@ -1,6 +1,6 @@
 {
   "name": "helm-desktop",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "description": "HELM Desktop — the laptop-side agent host: exposes allowlisted project folders, detects installed AI coding agents, pairs with a phone via QR, and runs agent tasks on the laptop while keeping it awake.",
   "author": "Helm",
   "license": "MIT",

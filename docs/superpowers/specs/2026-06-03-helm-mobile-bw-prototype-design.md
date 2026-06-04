@@ -1,6 +1,8 @@
 # HELM Mobile — Black & White Prototype (Spec)
 
 > Date: 2026-06-03 · Status: approved for build · Deliverable: self-contained HTML/CSS prototype.
+> **Revision 2026-06-04:** Screen 4 reworked from a static "notes-style" task box into a **conversational,
+> agent-spawning** surface (chat bar + panes, variant B) with a ＋ spawn launcher. See screen 4 below.
 > Supersedes the aurora-gradient direction in `design.md` for this monochrome redesign. Source sketches:
 > the user's Stitch project "HELM Remote Control" (`docs/design-research/stitch/*.png`), redesigned with
 > original craft — Stitch used only as a rough sketch, not as the generator.
@@ -49,11 +51,22 @@ radius: 12 inputs/buttons · 18 cards · 28 sheets · full pills/dots
    - **Settings**: appearance, notifications, paired-laptop manage/unpair.
    - **Account**: avatar, name/email, plan, **Log out** (outlined).
    - Bottom tab bar: Projects · Agents · Settings · Account.
-4. **Task → Console → Result** — header breadcrumb "TermWork / Claude Code" + status badge (Ready dot →
-   Running spinner-ring → ✓ Done). Three modes in one frame: **Input** (task box + Run agent),
-   **Running** (task summary chip + mono console that streams lines with a top shimmer + Cancel task),
-   **Result** (✓ completion banner + stat cards with count-up numbers: lines / files / elapsed + Start
-   new task). All status shown in grayscale (no green console).
+4. **Conversation → Console → Result** — a conversational, agent-spawning surface (revised 2026-06-04;
+   replaces the original static "notes-style" task box, which read like a notes app). Header breadcrumb
+   "HELM / Claude Code" + status badge (Ready dot → Running spinner-ring → ✓ Done). Layout = **chat
+   bar + panes**: a scrolling message **thread** on top, a sticky chat **composer** pinned at the bottom
+   (＋ button · grow-with-content text field · send). Three demoable states of the *same* screen:
+   - **Input** — empty thread with a centered hint ("Message Claude Code to spawn it in HELM…"); the
+     draft task sits in the composer. Status: Ready.
+   - **Running** — your message becomes a right-aligned **user bubble**, a "Claude Code · working" agent
+     label, then an embedded mono **console pane** that streams lines with a top shimmer. Composer clears
+     for follow-ups. Status: Running ring.
+   - **Result** — a collapsible "9 log lines" disclosure + a ✓ "Task completed" **result card** (with
+     View) + stat cards with count-up numbers (lines / files / elapsed) + "Start a new task"; composer
+     flips its placeholder to "Reply to Claude Code…". Status: ✓ Done.
+   The composer's **＋** opens a **spawn launcher** bottom sheet — pick **project + agent**, then **Start
+   conversation**. One active agent at a time (MVP-aligned; multi-agent/parallel runs stay out of scope).
+   All status shown in grayscale (no green console).
 5. **Offline / Laptop unreachable** — the never-blank recovery state. Soft reconnect glass bar at top
    ("Reconnecting…" + spinner ring + sweep), and the hard state: a still hollow "dead orb" (no
    heartbeat) with a no-signal glyph, "Laptop unreachable", body copy, **Try again** (shows ring while

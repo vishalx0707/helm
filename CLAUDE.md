@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **HELM is a mobile control interface for AI coding agents that run on your laptop.** The laptop stays the full workstation — it holds the repos, dependencies, credentials, compute, and the agent installations (Claude Code, Codex, Antigravity CLI). The phone is only a lightweight control surface: it never stores code or runs agents.
 
+**The mental model: the laptop is the cloud, the phone is the operator.** The two meet through a small **hosted relay at a fixed public address** that is built into both apps, so control works **from anywhere — cellular, another Wi‑Fi, not tied to localhost/LAN.** The user can **talk or type** the task. (The current code still defaults to a local relay; the hosted-relay + 6-digit-code direction is specced in `docs/superpowers/specs/2026-06-04-helm-remote-pairing-design.md` with a task plan in `docs/superpowers/plans/2026-06-04-helm-remote-pairing.md`.)
+
 Everything serves one flow:
 
 > **Project → Agent → Task → Progress → Result**
@@ -73,7 +75,7 @@ A classic Electron main/preload/renderer split. The **main process** owns everyt
 - **`runner.js`** — the directory-isolation + keep-awake core. On `submit_task` it resolves `projectId` to an **allowlisted absolute path** (refuses otherwise — agents never run outside an allowlisted folder), resolves `agentId` to its installed binary, and `spawn()`s it with `cwd` = that folder, `shell:false`, **argv-only** (the task is a single argv element, never concatenated into a command line). Tasks beginning with `-` are rejected and agent recipes insert a `--` end-of-options sentinel to defeat argv flag-smuggling. `.cmd`/`.bat` shims route through `cmd.exe /c` (still argv).
 - **`power.js`** — keep-awake engine with a **holder set** (`'user'` = manual toggle, `'agent'` = a run in progress). It physically blocks sleep (`powerSaveBlocker`) + overrides lid-close (platform backend `power.win.js`→`powercfg` / `power.mac.js`→`pmset`) only while ≥1 holder exists, and **always restores the saved original lid value** when the last holder leaves or on quit. This is why the first running task takes an `'agent'` hold and the last to finish releases it — a manual OFF can't cut protection out from under a running agent.
 - **`agents.js`** — `which`/`where` scan for `claude` / `codex` / `antigravity`|`ag`; only found agents are exposed. Each registry entry carries the non-interactive `args(task)` recipe (e.g. `claude -p -- <task>`, `codex exec -- <task>`). The public catalog is `{ id, name }` only — bin paths stay on the laptop.
-- **`pairing.js`** — a stable per-laptop session `token` (persisted in settings). The QR encodes `{ v, relay, token }`; `publicRelayUrl` lets it carry a tunnel URL instead of the local one.
+- **`pairing.js`** — a stable per-laptop session `token` (persisted in settings). The QR currently encodes `{ v, relay, token }` (and a `/sim?token=` URL the mobile parser also accepts); `publicRelayUrl` lets it carry a tunnel URL instead of the local one. **Target model (see the remote-pairing spec):** the relay URL becomes a built-in constant, and the QR/handoff carries a short-lived **6-digit code** that the relay swaps for the durable token — so the user only ever sees a 6-digit code, never a URL.
 - **`relay-client.js`** — persistent outbound socket with capped-exponential-backoff reconnect; registers as host, answers `list` with the catalog and `submit_task` via `runner.js`.
 - **`projects.js`** / **`settings.js`** — the folder allowlist and a JSON settings store (also holds `sessionToken`, `savedLidAction`, window mode, etc.).
 
@@ -89,7 +91,7 @@ A classic Electron main/preload/renderer split. The **main process** owns everyt
 
 ## Scope discipline
 
-**In the MVP:** project allowlisting, agent detection, QR pairing, remote task submission, streaming output + completion. **Explicitly out (Future Roadmap):** end-to-end payload encryption, hardened/rotating pairing, terminal/remote-shell access, file browser/editor, rich structured events & diff cards, multi-agent orchestration, team/plugin/analytics features. HELM is **not** a terminal, remote shell, remote desktop, file-sync tool, or cloud IDE — the phone never becomes the workstation.
+**In the MVP:** project allowlisting, agent detection, QR pairing, remote task submission, streaming output + completion. **Explicitly out (Future Roadmap):** voice control (speak the task / spoken summaries — vision, but just past the core text flow), real Google/email accounts (laptop pairing is the trust step until then), end-to-end payload encryption, terminal/remote-shell access, file browser/editor, rich structured events & diff cards, multi-agent orchestration, team/plugin/analytics features. *(Hosting the relay + 6-digit pairing is in-flight per the remote-pairing spec, not roadmap.)* HELM is **not** a terminal, remote shell, remote desktop, file-sync tool, or cloud IDE — the phone never becomes the workstation.
 
 ## Design references
 

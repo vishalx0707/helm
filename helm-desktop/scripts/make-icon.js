@@ -22,8 +22,8 @@ const svg = path.join(ASSETS, 'icon.svg');
 // canvas. macOS recolors template images automatically for light/dark menubars.
 const TRAY_SVG = Buffer.from(
   '<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">' +
-  '<text x="256" y="360" fill="#000000" font-family="Helvetica, Arial, sans-serif" ' +
-  'font-size="300" font-weight="800" letter-spacing="-12" text-anchor="middle">TW</text>' +
+  '<text x="256" y="340" fill="#000000" font-family="Consolas, Monaco, Courier New, monospace" ' +
+  'font-size="280" font-weight="700" letter-spacing="-8" text-anchor="middle">&gt;_</text>' +
   '</svg>', 'utf8'
 );
 

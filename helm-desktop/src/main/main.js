@@ -25,7 +25,7 @@ app.setName(APP_NAME);
 
 // The two window shapes. FULL is the resizable dashboard; MINI is the small,
 // fixed, always-on-top widget the user drags into a corner.
-const FULL = { width: 460, height: 600, minWidth: 400, minHeight: 420 };
+const FULL = { width: 940, height: 660, minWidth: 760, minHeight: 560 };
 const MINI = { width: 252, height: 100 };
 
 let win = null;
@@ -41,7 +41,10 @@ function trayImage() {
     const t = nativeImage.createFromPath(TRAY_TEMPLATE);
     if (!t.isEmpty()) { t.setTemplateImage(true); return t; }
   }
-  const img = nativeImage.createFromPath(ICON_PNG);
+  let img = nativeImage.createFromPath(ICON_PNG);
+  if (!img.isEmpty()) {
+    img = img.resize({ width: 16, height: 16 });
+  }
   return img.isEmpty() ? nativeImage.createEmpty() : img;
 }
 
@@ -226,6 +229,8 @@ if (!app.requestSingleInstanceLock()) {
     // --- HELM agent control ---
     // Push relay/peer connection changes to the window's Pairing panel.
     relayClient.onStatus((s) => { if (win && !win.isDestroyed()) win.webContents.send('relay:update', s); });
+    // Mirror live task events to the renderer's Status frame (display only).
+    relayClient.onTask((ev) => { if (win && !win.isDestroyed()) win.webContents.send('task:update', ev); });
     // An agent run engages/releases keep-awake — refresh the timer + tray when it does.
     runner.setOnChange(() => { refreshTray(); sendStatus(); });
     // Detect installed agents (async; the catalog is sent to the phone on request).
@@ -295,6 +300,14 @@ ipcMain.handle('open:external', (_e, url) => {
 
 // ---- HELM agent control ----
 ipcMain.handle('pairing:get', () => pairing.info());
+ipcMain.handle('pairing:regenerate', async () => {
+  // Request a new 6-digit code without rotating the durable token —
+  // so generating a new code never kicks an already-paired phone off.
+  relayClient.requestNewCode();
+  // Give the relay a moment to respond with pair_code before we read info
+  await new Promise(r => setTimeout(r, 300));
+  return pairing.info();
+});
 ipcMain.handle('projects:list', () => projects.list());
 ipcMain.handle('projects:add', () => projects.add(win));
 ipcMain.handle('projects:remove', (_e, id) => projects.remove(typeof id === 'string' ? id : ''));

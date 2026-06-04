@@ -284,7 +284,7 @@ function Row({ icon, label, value, chevron, toggle, onToggle, onPress, last, lab
         <Feather name={icon} size={17} color={colors.inkMid} />
       </View>
       <Text style={[styles.rowLabel, labelDim && { color: colors.inkMid }]}>{label}</Text>
-      {value ? <Text style={styles.rowVal}>{value}</Text> : null}
+      {typeof value === 'string' && value ? <Text style={styles.rowVal}>{value}</Text> : null}
       {toggle ? <Switch on={value} /> : null}
       {chevron ? <Feather name="chevron-right" size={15} color={colors.inkLo} /> : null}
     </Pressable>

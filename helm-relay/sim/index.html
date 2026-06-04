@@ -1,85 +1,2423 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>HELM — phone simulator</title>
-  <style>
-    :root { --bg:#0f1115; --panel:#171a21; --line:#262b35; --ink:#e7e9ee; --dim:#8b93a3;
-            --accent:#5b8cff; --ok:#46c08a; --warn:#e0a33a; --err:#e06a5a; }
-    * { box-sizing: border-box; }
-    body { margin:0; background:var(--bg); color:var(--ink);
-           font:14px/1.5 ui-monospace,"Cascadia Mono",Consolas,monospace; }
-    .wrap { max-width:520px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column; }
-    header { padding:14px 16px; border-bottom:1px solid var(--line);
-             display:flex; align-items:center; gap:10px; }
-    header h1 { font-size:15px; margin:0; letter-spacing:.04em; }
-    .dot { width:9px; height:9px; border-radius:50%; background:var(--dim); }
-    .dot.on { background:var(--ok); } .dot.off { background:var(--err); }
-    .dot.wait { background:var(--warn); }
-    .conn { margin-left:auto; font-size:12px; color:var(--dim); }
-    main { padding:16px; display:flex; flex-direction:column; gap:16px; flex:1; }
-    .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; }
-    label { display:block; font-size:11px; color:var(--dim); text-transform:uppercase;
-            letter-spacing:.08em; margin-bottom:6px; }
-    input, textarea, select, button {
-      font:inherit; color:var(--ink); background:#0c0e12; border:1px solid var(--line);
-      border-radius:8px; padding:9px 11px; width:100%; }
-    textarea { resize:vertical; min-height:64px; }
-    button { background:var(--accent); border:none; color:#fff; cursor:pointer; font-weight:600; }
-    button.ghost { background:transparent; border:1px solid var(--line); color:var(--ink); }
-    button:disabled { opacity:.45; cursor:not-allowed; }
-    .row { display:flex; gap:8px; } .row > * { flex:1; }
-    .pill { display:inline-block; padding:6px 10px; margin:0 6px 6px 0; border-radius:999px;
-            border:1px solid var(--line); cursor:pointer; font-size:13px; background:#0c0e12; }
-    .pill.sel { border-color:var(--accent); color:#fff; background:#1b2740; }
-    h2 { font-size:12px; color:var(--dim); text-transform:uppercase; letter-spacing:.08em;
-         margin:0 0 8px; }
-    #log { background:#0a0c10; border:1px solid var(--line); border-radius:8px; padding:10px;
-           white-space:pre-wrap; word-break:break-word; min-height:120px; max-height:42vh;
-           overflow:auto; font-size:13px; }
-    .muted { color:var(--dim); } .ok { color:var(--ok); } .err { color:var(--err); }
-    .hide { display:none; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>HELM Mobile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #0A0A0B;
+  --surface: #131316;
+  --surface-2: #1B1B1F;
+  --hairline: rgba(255,255,255,.08);
+  --hairline-2: rgba(255,255,255,.14);
+  --ink-hi: #FAFAFA;
+  --ink-mid: #A1A1A6;
+  --ink-lo: #6B6B70;
+  --on-fill: #0A0A0B;
+  --fill: #FFFFFF;
+  --focus: rgba(255,255,255,.5);
+  --r-in: 12px;
+  --r-card: 18px;
+  --r-sheet: 28px;
+  --ease: cubic-bezier(.22,1,.36,1);
+  --ui: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+  --mono: 'Geist Mono', ui-monospace, monospace;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+html, body {
+  background: #000;
+  color: var(--ink-hi);
+  font-family: var(--ui);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Phone container on desktop, borderless on mobile */
+.phone {
+  width: 375px;
+  height: 812px;
+  border-radius: 48px;
+  position: relative;
+  background: #1c1c1e;
+  padding: 12px;
+  box-shadow: 0 40px 90px -30px rgba(0,0,0,.85), 0 0 0 1px rgba(255,255,255,.04), inset 0 1px 0 rgba(255,255,255,.1);
+  transition: all 0.3s var(--ease);
+}
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 38px;
+  overflow: hidden;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+/* notch + statusbar inside the phone frame on desktop */
+.notch {
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 110px;
+  height: 26px;
+  background: #000;
+  border-radius: 0 0 16px 16px;
+  z-index: 40;
+}
+.statusbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 30;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--mono);
+  color: var(--ink-hi);
+  pointer-events: none;
+}
+.statusbar .dots {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* Base screen body */
+.scr-body {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 56px 20px 20px;
+  z-index: 10;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Views switcher */
+.view-panel {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  z-index: 15;
+}
+.view-panel.active {
+  display: flex;
+}
+
+/* UI Elements */
+.helm-glyph {
+  display: grid;
+  place-items: center;
+  background: var(--fill);
+  color: var(--on-fill);
+  border-radius: 11px;
+  font-family: var(--mono);
+  font-weight: 500;
+}
+.helm-glyph.lg {
+  width: 62px;
+  height: 62px;
+  font-size: 26px;
+  border-radius: 18px;
+  box-shadow: 0 10px 30px -8px rgba(255,255,255,.25);
+}
+.btn {
+  height: 52px;
+  border-radius: var(--r-in);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-family: var(--ui);
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  width: 100%;
+  transition: transform .12s var(--ease), background .15s, border-color .15s;
+  letter-spacing: -.01em;
+  outline: none;
+}
+.btn:active {
+  transform: scale(.97);
+}
+.btn-fill {
+  background: var(--fill);
+  color: var(--on-fill);
+  font-weight: 600;
+}
+.btn-fill:hover {
+  background: #ececec;
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-hi);
+  border-color: var(--hairline-2);
+}
+.btn-ghost:hover {
+  background: rgba(255,255,255,.04);
+}
+.btn svg {
+  width: 18px;
+  height: 18px;
+}
+.h-hero {
+  font-size: 27px;
+  font-weight: 600;
+  letter-spacing: -.03em;
+  line-height: 1.12;
+}
+.muted { color: var(--ink-mid); }
+.dim { color: var(--ink-lo); }
+.mono { font-family: var(--mono); }
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--ink-lo);
+  font-size: 12px;
+  font-family: var(--mono);
+  letter-spacing: .18em;
+}
+.divider::before, .divider::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: var(--hairline);
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-lo);
+  position: relative;
+  display: inline-block;
+}
+.dot.live {
+  background: #46c08a;
+}
+.dot.live::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 1px solid #46c08a;
+  animation: breathe 2.4s var(--ease) infinite;
+}
+.dot.warn {
+  background: #e0a33a;
+}
+@keyframes breathe {
+  0% { transform: scale(.7); opacity: .7; }
+  70% { transform: scale(1.9); opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* Screen 1: Login */
+.login-screen {
+  justify-content: space-between;
+  text-align: center;
+}
+.login-screen .top {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  margin-top: 42px;
+}
+.login-screen .brandtxt {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+.login-screen .brandtxt b {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+.login-screen .brandtxt p {
+  font-size: 15px;
+  color: var(--ink-mid);
+  line-height: 1.5;
+  max-width: 240px;
+}
+.login-screen .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.login-screen .legal {
+  font-size: 11px;
+  color: var(--ink-lo);
+  line-height: 1.6;
+  margin-top: 18px;
+}
+.login-screen .legal a {
+  color: var(--ink-mid);
+  text-decoration: none;
+  border-bottom: 1px solid var(--hairline-2);
+}
+
+/* Screen 2: Scan / Enter Token */
+.scan-screen .head {
+  margin-bottom: 22px;
+}
+.scan-screen .head .back {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-lo);
+  cursor: pointer;
+  margin-bottom: 14px;
+  display: inline-block;
+}
+.scan-screen .head p {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--ink-mid);
+  line-height: 1.5;
+}
+.manual-box {
+  margin-top: 6px;
+}
+.field-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  color: var(--ink-lo);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.input-field {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline-2);
+  border-radius: var(--r-in);
+  padding: 0 14px;
+  height: 50px;
+  color: var(--ink-hi);
+  font-family: var(--mono);
+  font-size: 13px;
+  outline: none;
+  margin-bottom: 14px;
+}
+.input-field:focus {
+  border-color: var(--focus);
+}
+.reassure {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  color: var(--ink-lo);
+  font-size: 11.5px;
+  line-height: 1.4;
+  margin-top: 18px;
+  text-align: center;
+}
+.reassure svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+/* Screen 3: Dashboard Layout */
+.dash-layout {
+  padding-top: 46px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+.topbar .left {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.topbar .helm-glyph {
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  border-radius: 9px;
+}
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--ink-mid);
+  font-family: var(--mono);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  padding: 6px 11px;
+  border-radius: 999px;
+}
+.avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(145deg,#2a2a30,#444);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-hi);
+  cursor: pointer;
+  border: 1px solid var(--hairline-2);
+}
+.tab-body {
+  flex: 1;
+  overflow: hidden;
+  padding: 20px 20px 12px;
+  display: flex;
+  flex-direction: column;
+}
+.tab-body h3.section {
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  margin-bottom: 4px;
+}
+.tab-body .section-sub {
+  font-size: 13px;
+  color: var(--ink-lo);
+  margin-bottom: 18px;
+}
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 20px;
+}
+.scroll-area::-webkit-scrollbar {
+  width: 0;
+}
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  padding: 15px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: transform .14s var(--ease), border-color .15s, background .15s;
+}
+.card:hover {
+  border-color: var(--hairline-2);
+  background: #16161a;
+}
+.card:active {
+  transform: scale(.985);
+}
+.card .ic {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  display: grid;
+  place-items: center;
+  flex: none;
+  color: var(--ink-mid);
+}
+.card .ic svg {
+  width: 18px;
+  height: 18px;
+}
+.card .meta {
+  flex: 1;
+  min-width: 0;
+}
+.card .meta .nm {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card .meta .pth {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--ink-mid);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card .meta .st {
+  font-size: 11px;
+  color: var(--ink-lo);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.card .chev {
+  color: var(--ink-lo);
+  flex: none;
+}
+.tag {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--hairline-2);
+  color: var(--ink-mid);
+}
+.tag.on {
+  color: var(--on-fill);
+  background: var(--fill);
+  border-color: var(--fill);
+}
+.tag.off {
+  color: var(--ink-lo);
+  border-style: dashed;
+}
+.agent-row.sel {
+  border-color: var(--ink-hi);
+  background: #1a1a1e;
+}
+.agent-row.disabled {
+  opacity: .42;
+  pointer-events: none;
+}
+.agent-row .desc {
+  font-size: 12px;
+  color: var(--ink-lo);
+  margin-top: 3px;
+  line-height: 1.35;
+}
+
+/* List details */
+.list-group {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  overflow: hidden;
+}
+.list-group .row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 15px 16px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.list-group .row + .row {
+  border-top: 1px solid var(--hairline);
+}
+.list-group .row:hover {
+  background: #16161a;
+}
+.list-group .row .ic {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-mid);
+  flex: none;
+}
+.list-group .row .ic svg {
+  width: 17px;
+  height: 17px;
+}
+.list-group .row .lab {
+  flex: 1;
+  font-size: 14.5px;
+}
+.list-group .row .val {
+  font-size: 12.5px;
+  color: var(--ink-lo);
+  font-family: var(--mono);
+}
+.list-group .row .chev {
+  color: var(--ink-lo);
+}
+.switch {
+  width: 40px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline-2);
+  position: relative;
+  flex: none;
+  cursor: pointer;
+}
+.switch.on {
+  background: var(--fill);
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ink-mid);
+  transition: .18s var(--ease);
+}
+.switch.on::after {
+  left: 18px;
+  background: var(--on-fill);
+}
+.account-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.account-hero .av-lg {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(145deg,#2a2a30,#4a4a52);
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  font-weight: 600;
+  border: 1px solid var(--hairline-2);
+}
+.account-hero .nm {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+.account-hero .em {
+  font-size: 13px;
+  color: var(--ink-mid);
+  font-family: var(--mono);
+}
+
+/* Bottom Tabbar */
+.tabbar {
+  display: flex;
+  border-top: 1px solid var(--hairline);
+  background: rgba(10,10,11,.75);
+  backdrop-filter: blur(12px);
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  flex-shrink: 0;
+}
+.tabbar .tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 0;
+  color: var(--ink-lo);
+  cursor: pointer;
+  font-size: 10.5px;
+  letter-spacing: .02em;
+  transition: color .15s;
+  background: none;
+  border: 0;
+  font-family: var(--ui);
+  outline: none;
+}
+.tabbar .tab svg {
+  width: 21px;
+  height: 21px;
+}
+.tabbar .tab.active {
+  color: var(--ink-hi);
+}
+
+/* Tab panes */
+.tabpane {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+.tabpane.active {
+  display: flex;
+}
+
+/* Screen 4: Task / Spawner view */
+.task-view {
+  padding-top: 46px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.task-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--hairline);
+  flex-shrink: 0;
+}
+.task-head .crumb {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink-mid);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+.task-head .crumb b {
+  color: var(--ink-hi);
+  font-weight: 500;
+}
+.statusbadge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11.5px;
+  font-family: var(--mono);
+  color: var(--ink-mid);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  padding: 6px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.ring {
+  width: 15px;
+  height: 15px;
+}
+.ring circle {
+  fill: none;
+  stroke-width: 2.6;
+}
+.ring .bg {
+  stroke: var(--hairline-2);
+}
+.ring .fg {
+  stroke: var(--ink-hi);
+  stroke-linecap: round;
+  stroke-dasharray: 34;
+  stroke-dashoffset: 14;
+  transform-origin: center;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.thread {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  min-height: 0;
+}
+.thread::-webkit-scrollbar {
+  width: 0;
+}
+.cmode {
+  display: none;
+  flex-direction: column;
+  gap: 13px;
+  width: 100%;
+}
+.cmode.active {
+  display: flex;
+}
+.cmode-fill {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.thread-hint {
+  margin: auto;
+  text-align: center;
+  color: var(--ink-lo);
+  font-size: 12.5px;
+  line-height: 1.6;
+  max-width: 232px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 13px;
+}
+.thread-hint b {
+  color: var(--ink-mid);
+  font-weight: 500;
+}
+.thread-hint .bubble-glyph {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 1px solid var(--hairline-2);
+  display: grid;
+  place-items: center;
+  color: var(--ink-mid);
+}
+.thread-hint .bubble-glyph svg {
+  width: 21px;
+  height: 21px;
+}
+.msg {
+  max-width: 84%;
+  font-size: 13.5px;
+  line-height: 1.5;
+  letter-spacing: -.01em;
+}
+.msg.user {
+  align-self: flex-end;
+  background: var(--fill);
+  color: var(--on-fill);
+  padding: 10px 13px;
+  border-radius: 16px 16px 5px 16px;
+  font-weight: 500;
+  word-break: break-word;
+}
+.msg.agent-label {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  color: var(--ink-lo);
+  text-transform: uppercase;
+}
+.msg.agent-label .av {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  display: grid;
+  place-items: center;
+  color: var(--ink-mid);
+  font-size: 9px;
+}
+.console-embed {
+  align-self: stretch;
+  background: #08080A;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  flex: 1;
+  min-height: 180px;
+}
+.console-embed::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 5;
+  background: linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);
+  background-size: 50% 100%;
+  animation: shimmer 1.8s linear infinite;
+}
+@keyframes shimmer {
+  0% { background-position: -60% 0; }
+  100% { background-position: 160% 0; }
+}
+.console-embed .ehead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--hairline);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-lo);
+  flex-shrink: 0;
+}
+.console-embed .lines {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.75;
+}
+.console-embed .lines::-webkit-scrollbar {
+  width: 0;
+}
+.cline {
+  color: var(--ink-mid);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.cline .ok {
+  color: var(--ink-hi);
+}
+.cline .mut {
+  color: var(--ink-lo);
+}
+.disclose {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-lo);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: .15s;
+}
+.disclose:hover {
+  color: var(--ink-mid);
+  border-color: var(--hairline-2);
+}
+.disclose svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.15s;
+}
+.disclose.open svg {
+  transform: rotate(180deg);
+}
+.result {
+  align-self: stretch;
+  background: var(--surface);
+  border: 1px solid var(--hairline-2);
+  border-radius: 14px;
+  padding: 12px 13px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+.result .chk {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--fill);
+  color: var(--on-fill);
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.result .chk svg {
+  width: 16px;
+  height: 16px;
+}
+.result .chk.fail {
+  background: #e06a5a;
+  color: #fff;
+}
+.result .r-meta {
+  flex: 1;
+  min-width: 0;
+}
+.result .r-meta .t {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+.result .r-meta .s {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink-lo);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.result .view {
+  font-size: 11px;
+  color: var(--ink-mid);
+  font-family: var(--mono);
+  border: 1px solid var(--hairline-2);
+  border-radius: 8px;
+  padding: 5px 9px;
+  flex: none;
+  cursor: pointer;
+}
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 4px 0 16px;
+  align-self: stretch;
+}
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  padding: 14px 6px;
+  text-align: center;
+}
+.stat .num {
+  font-family: var(--mono);
+  font-size: 21px;
+  font-weight: 500;
+  letter-spacing: -.02em;
+}
+.stat .lbl {
+  font-size: 9.5px;
+  color: var(--ink-lo);
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  margin-top: 5px;
+}
+.newtask {
+  align-self: center;
+  margin-top: 2px;
+  font-size: 11.5px;
+  color: var(--ink-mid);
+  font-family: var(--mono);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--hairline-2);
+  outline: none;
+}
+
+/* Composer sticky bar */
+.composer {
+  border-top: 1px solid var(--hairline);
+  padding: 11px 13px calc(11px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: flex-end;
+  gap: 9px;
+  background: rgba(10,10,11,.75);
+  backdrop-filter: blur(12px);
+  flex-shrink: 0;
+}
+.composer .plus {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--hairline-2);
+  background: var(--surface);
+  display: grid;
+  place-items: center;
+  color: var(--ink-mid);
+  flex: none;
+  cursor: pointer;
+  transition: .15s;
+  outline: none;
+}
+.composer .plus:hover {
+  background: #16161a;
+  color: var(--ink-hi);
+}
+.composer .plus svg {
+  width: 18px;
+  height: 18px;
+}
+.composer .field {
+  flex: 1;
+  min-height: 40px;
+  max-height: 96px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline-2);
+  border-radius: 14px;
+  padding: 11px 13px;
+  font-size: 13.5px;
+  color: var(--ink-hi);
+  line-height: 1.4;
+  font-family: var(--ui);
+  resize: none;
+  outline: none;
+}
+.composer .field:focus {
+  border-color: var(--focus);
+}
+.composer .field::placeholder {
+  color: var(--ink-lo);
+}
+.composer .send {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--fill);
+  color: var(--on-fill);
+  display: grid;
+  place-items: center;
+  flex: none;
+  cursor: pointer;
+  border: 0;
+  transition: transform .12s var(--ease);
+  outline: none;
+}
+.composer .send:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.composer .send:active:not(:disabled) {
+  transform: scale(.92);
+}
+.composer .send svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Spawn Launcher bottom sheet */
+.sheet-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0,0,0,.55);
+  display: flex;
+  align-items: flex-end;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s var(--ease);
+}
+.sheet-scrim.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+.sheet {
+  width: 100%;
+  background: var(--surface);
+  border-top: 1px solid var(--hairline-2);
+  border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+  padding: 16px 18px calc(20px + env(safe-area-inset-bottom));
+  box-shadow: 0 -20px 50px -20px rgba(0,0,0,.7);
+  transform: translateY(100%);
+  transition: transform .26s var(--ease);
+}
+.sheet-scrim.open .sheet {
+  transform: none;
+}
+.sheet .grip {
+  width: 38px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--hairline-2);
+  margin: 0 auto 16px;
+  cursor: pointer;
+}
+.sheet h4 {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  margin-bottom: 3px;
+}
+.sheet .sh-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-lo);
+  margin-bottom: 16px;
+}
+.sheet .selectrow {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  margin-bottom: 16px;
+}
+.sheet .sel {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-in);
+  padding: 12px 13px;
+  cursor: pointer;
+  transition: .15s;
+}
+.sheet .sel:hover {
+  border-color: var(--hairline-2);
+}
+.sheet .sel .ic {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--bg);
+  border: 1px solid var(--hairline);
+  display: grid;
+  place-items: center;
+  color: var(--ink-mid);
+  flex: none;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+.sheet .sel .ic svg {
+  width: 16px;
+  height: 16px;
+}
+.sheet .sel .l {
+  flex: 1;
+  min-width: 0;
+}
+.sheet .sel .l .k {
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--ink-lo);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.sheet .sel .l .v {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sheet .sel .chev {
+  color: var(--ink-lo);
+}
+.sheet .startbtn {
+  height: 50px;
+  border-radius: var(--r-in);
+  background: var(--fill);
+  color: var(--on-fill);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  font-size: 14.5px;
+  font-weight: 600;
+  border: 0;
+  width: 100%;
+  cursor: pointer;
+  font-family: var(--ui);
+  transition: transform .12s var(--ease);
+  outline: none;
+}
+.sheet .startbtn:active {
+  transform: scale(.98);
+}
+.sheet .startbtn svg {
+  width: 17px;
+  height: 17px;
+}
+
+/* Project/Agent Selection Overlay Sheets */
+.option-list {
+  max-height: 250px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.option-item {
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-in);
+  padding: 12px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.option-item.selected {
+  border-color: var(--fill);
+}
+.option-item .name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.option-item .path {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-mid);
+  margin-top: 2px;
+}
+
+/* Screen 5: Offline */
+.offline-screen {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0 34px;
+}
+.deadorb {
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 2px solid var(--hairline-2);
+  display: grid;
+  place-items: center;
+  margin-bottom: 28px;
+  color: var(--ink-lo);
+}
+.deadorb svg {
+  width: 32px;
+  height: 32px;
+}
+.offline-screen h2 {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  margin-bottom: 10px;
+}
+.offline-screen p {
+  font-size: 14px;
+  color: var(--ink-mid);
+  line-height: 1.55;
+  margin-bottom: 26px;
+  max-width: 248px;
+}
+.reconnect-bar {
+  position: absolute;
+  top: 54px;
+  left: 14px;
+  right: 14px;
+  z-index: 35;
+  background: rgba(20,20,24,.92);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--hairline-2);
+  border-radius: 12px;
+  padding: 10px 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--ink-mid);
+  overflow: hidden;
+  pointer-events: none;
+}
+.reconnect-bar .ring {
+  flex: none;
+}
+.reconnect-bar::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  width: 40%;
+  background: linear-gradient(90deg,transparent,var(--ink-hi),transparent);
+  animation: sweep 1.5s var(--ease) infinite;
+}
+@keyframes sweep {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+@media (max-width: 600px) {
+  body {
+    background: #0A0A0B;
+  }
+  .phone {
+    width: 100vw;
+    height: 100vh;
+    border-radius: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .screen {
+    border-radius: 0;
+  }
+  .notch {
+    display: none;
+  }
+  .statusbar {
+    display: none;
+  }
+  .scr-body {
+    padding-top: 20px;
+  }
+  .task-view {
+    padding-top: 10px;
+  }
+  .dash-layout {
+    padding-top: 10px;
+  }
+}
+</style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <span id="cdot" class="dot off"></span>
-      <h1>HELM · phone sim</h1>
-      <span id="conn" class="conn">disconnected</span>
-    </header>
-    <main>
-      <div class="panel">
-        <label for="token">Pairing token (from the desktop window)</label>
-        <div class="row">
-          <input id="token" placeholder="paste token…" autocomplete="off" spellcheck="false" />
-          <button id="connect" style="flex:0 0 auto; width:auto; padding:9px 16px;">Connect</button>
+
+<div class="phone">
+  <div class="screen">
+    <div class="notch"></div>
+    <div class="statusbar">
+      <span id="header-time">9:41</span>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <span id="header-paired-dot" class="dot" style="width:6px; height:6px;"></span>
+        <span class="dots">●●● ⌁ ▮</span>
+      </div>
+    </div>
+
+    <!-- Reconnecting Bar -->
+    <div class="reconnect-bar" id="reconnectBar" style="display: none;">
+      <svg class="ring" viewBox="0 0 24 24"><circle class="bg" cx="12" cy="12" r="9"/><circle class="fg" cx="12" cy="12" r="9"/></svg>
+      <span>Reconnecting to your laptop…</span>
+    </div>
+
+    <!-- ============ SCREEN 1: WELCOME / LOGIN ============ -->
+    <div class="view-panel scr-body login-screen active" id="view-login">
+      <div class="top">
+        <div class="helm-glyph lg">&gt;_</div>
+        <div class="brandtxt">
+          <b>HELM</b>
+          <p>Direct the AI agents on your laptop — from anywhere.</p>
         </div>
-        <p class="muted" id="hint" style="margin:8px 0 0; font-size:12px;">
-          Or open <code>/sim?token=YOUR_TOKEN</code>. The relay URL is this page's origin.
-        </p>
+      </div>
+      <div>
+        <div class="actions">
+          <button class="btn btn-fill" onclick="goToScan()">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.36 12.7c0-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.47.83-.72 0-1.82-.81-3-.79-1.54.02-2.96.9-3.75 2.28-1.6 2.78-.41 6.9 1.15 9.16.76 1.1 1.67 2.35 2.86 2.3 1.15-.04 1.58-.74 2.97-.74 1.38 0 1.77.74 2.98.72 1.23-.02 2.01-1.12 2.76-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.4-.92-2.42-3.65zM14.13 5.3c.63-.77 1.06-1.83.94-2.9-.91.04-2.02.61-2.67 1.37-.58.67-1.09 1.75-.95 2.78 1.02.08 2.05-.52 2.68-1.25z"/></svg>
+            Continue with Apple
+          </button>
+          <button class="btn btn-ghost" onclick="goToScan()">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M21.35 11.1H12v3.2h5.35c-.23 1.4-1.64 4.1-5.35 4.1-3.22 0-5.85-2.66-5.85-5.95S8.78 6.5 12 6.5c1.83 0 3.06.78 3.76 1.45l2.56-2.47C16.78 3.9 14.6 3 12 3 6.98 3 2.9 7.03 2.9 12s4.08 9 9.1 9c5.25 0 8.73-3.69 8.73-8.89 0-.6-.07-1.05-.16-1.51z"/></svg>
+            Continue with Google
+          </button>
+          <div class="divider">OR</div>
+          <button class="btn btn-ghost" onclick="goToScan()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 5 8-5"/></svg>
+            Continue with email
+          </button>
+        </div>
+        <p class="legal">By continuing you agree to HELM's<br/><a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</p>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN 2: SCAN / PAIR ============ -->
+    <div class="view-panel scr-body scan-screen" id="view-scan">
+      <div class="head">
+        <span class="back" onclick="goBackToLogin()">← &nbsp;WELCOME</span>
+        <h2 class="h-hero">Pair with your laptop.</h2>
+        <p>Enter the pairing token shown in the HELM Desktop app on your laptop.</p>
+      </div>
+      
+      <div class="manual-box">
+        <div class="field-label">PAIRING TOKEN</div>
+        <input type="text" class="input-field" id="scan-token-field" placeholder="paste token from desktop…" autocomplete="off" spellcheck="false" />
+        
+        <div class="field-label">RELAY URL</div>
+        <input type="text" class="input-field" id="scan-relay-field" placeholder="ws://localhost:8787" autocomplete="off" spellcheck="false" />
       </div>
 
-      <div class="panel" id="catalogPanel">
-        <div class="row" style="align-items:center;">
-          <h2 style="margin:0;">Projects</h2>
-          <button id="refresh" class="ghost" style="flex:0 0 auto; width:auto; padding:7px 12px;">Refresh</button>
+      <div id="scan-error" style="color:#e06a5a; font-size:12.5px; margin-top:4px; font-family:var(--mono); min-height:18px;"></div>
+      
+      <div style="flex:1"></div>
+      <button class="btn btn-fill" id="btn-pair-device" onclick="submitPairing()">Pair device</button>
+      <div class="reassure">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        No code or credentials ever leave your laptop · TLS encrypted.
+      </div>
+    </div>
+
+    <!-- ============ SCREEN 3: DASHBOARD ============ -->
+    <div class="view-panel dash-layout" id="view-dashboard">
+      <div class="topbar">
+        <div class="left">
+          <div class="helm-glyph">&gt;_</div>
+          <span class="pill" id="dashboard-status-badge"><span class="dot live"></span>Connected</span>
         </div>
-        <div id="projects" class="muted">— connect, then Refresh —</div>
-        <h2 style="margin-top:14px;">Agent</h2>
-        <div id="agents" class="muted">—</div>
-        <label for="task" style="margin-top:14px;">Task</label>
-        <textarea id="task" placeholder="e.g. list the files and summarize the README"></textarea>
-        <button id="send" style="margin-top:10px;" disabled>Send task</button>
+        <div class="avatar" onclick="activateTab('account')">VS</div>
       </div>
 
-      <div class="panel">
-        <h2>Output</h2>
-        <div id="log" class="muted">—</div>
+      <!-- PROJECTS TAB -->
+      <div class="tabpane active" id="pane-projects">
+        <div class="tab-body">
+          <h3 class="section">Projects</h3>
+          <div class="section-sub mono" id="projects-count-sub">0 directories authorized</div>
+          <div class="scroll-area">
+            <div class="cards" id="projects-list-container">
+              <!-- projects list here -->
+            </div>
+            <div class="ghost-row" onclick="alert('Manage directories in the HELM Desktop app on your laptop.')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+              Authorize a directory
+            </div>
+          </div>
+        </div>
       </div>
-    </main>
+
+      <!-- AGENTS TAB -->
+      <div class="tabpane" id="pane-agents">
+        <div class="tab-body">
+          <h3 class="section">Agents</h3>
+          <div class="section-sub mono">detected on this laptop</div>
+          <div class="scroll-area">
+            <div class="cards" id="agents-list-container">
+              <!-- agents list here -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div class="tabpane" id="pane-settings">
+        <div class="tab-body">
+          <h3 class="section">Settings</h3>
+          <div class="section-sub mono">app &amp; connection</div>
+          <div class="scroll-area">
+            <div class="list-group" style="margin-bottom:14px">
+              <div class="row">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+                <div class="lab">Appearance</div>
+                <div class="val">Dark</div>
+                <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div class="row">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+                <div class="lab">Notifications</div>
+                <div class="switch on" id="sw-notifications" onclick="this.classList.toggle('on')"></div>
+              </div>
+              <div class="row">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 1v6M12 17v6M4.2 4.2l4.3 4.3M15.5 15.5l4.3 4.3"/></svg></div>
+                <div class="lab">Keep laptop awake</div>
+                <div class="switch on" id="sw-keepawake" onclick="toggleKeepAwake()"></div>
+              </div>
+            </div>
+            <div class="list-group">
+              <div class="row">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+                <div class="lab">Connection</div>
+                <div class="val" id="settings-relay-label">localhost</div>
+              </div>
+              <div class="row" onclick="unpair()">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+                <div class="lab" style="color:var(--ink-mid)">Unpair this device</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACCOUNT TAB -->
+      <div class="tabpane" id="pane-account">
+        <div class="tab-body">
+          <div class="scroll-area">
+            <div class="account-hero" style="margin-top:8px">
+              <div class="av-lg">VS</div>
+              <div>
+                <div class="nm">Vishal S.</div>
+                <div class="em">vishalxstack@gmail.com</div>
+              </div>
+            </div>
+            <div class="list-group" style="margin-bottom:14px">
+              <div class="row">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2 4 7v6c0 5 3.5 7.5 8 9 4.5-1.5 8-4 8-9V7z"/></svg></div>
+                <div class="lab">Plan</div>
+                <div class="val">Pro</div>
+                <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+              <div class="row">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+                <div class="lab">Manage account</div>
+                <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg>
+              </div>
+            </div>
+            <button class="btn btn-ghost" onclick="unpair()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M15 12H3M7 8l-4 4 4 4M11 4h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/></svg>
+              Log out
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB BAR -->
+      <div class="tabbar">
+        <button class="tab active" data-tab="projects" onclick="activateTab('projects')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          Projects
+        </button>
+        <button class="tab" data-tab="agents" onclick="activateTab('agents')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg>
+          Agents
+        </button>
+        <button class="tab" data-tab="settings" onclick="activateTab('settings')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.4-2.5H9.5L9 5.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4L5 11a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.5 2.5h4l.4-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.6a7 7 0 0 0 .1-1z"/></svg>
+          Settings
+        </button>
+        <button class="tab" data-tab="account" onclick="activateTab('account')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+          Account
+        </button>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN 4: CONVERSATION / TASK VIEW ============ -->
+    <div class="view-panel task-view" id="view-task">
+      <div class="task-head">
+        <div class="crumb" onclick="goBackToDashboard()">← PROJECTS <span style="color:var(--ink-lo)">/</span> <b id="crumb-project-name">Project</b></div>
+        <div class="statusbadge" id="task-status-badge"><span class="dot live"></span>Ready</div>
+      </div>
+
+      <div class="thread" id="task-thread">
+        <!-- Input state -->
+        <div class="cmode active" data-cmode="input">
+          <div class="thread-hint">
+            <div class="bubble-glyph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.7L3 21l1.8-5.8A8.5 8.5 0 1 1 21 11.5z"/></svg></div>
+            <span>Message <span id="prompt-agent-name" style="font-weight:600;">Claude Code</span> to spawn it in <b id="prompt-project-name">Project</b>. Its work streams back here.</span>
+          </div>
+        </div>
+
+        <!-- Running state -->
+        <div class="cmode cmode-fill" data-cmode="running">
+          <div class="msg user" id="running-user-prompt">—</div>
+          <div class="msg agent-label"><span class="av">✦</span><span id="running-agent-label">Claude Code · working</span></div>
+          <div class="console-embed">
+            <div class="ehead"><span id="console-title">console · live</span><span class="mono" id="console-sub-label">idle</span></div>
+            <div class="lines" id="console-lines-container">
+              <!-- Streaming lines go here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Done state -->
+        <div class="cmode cmode-fill" data-cmode="done">
+          <div class="msg user" id="done-user-prompt">—</div>
+          <div class="msg agent-label"><span class="av">✦</span><span id="done-agent-label">Claude Code</span></div>
+          <div class="disclose" id="disclose-btn" onclick="toggleConsoleExpand()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+            <span id="disclose-text">Show logs</span>
+          </div>
+          
+          <!-- Collapsed console list -->
+          <div class="console-embed" id="done-console-box" style="display: none; flex: none; height: 180px; margin: 8px 0;">
+            <div class="ehead"><span>console · logs</span><span class="mono" id="done-console-sub-label">completed</span></div>
+            <div class="lines" id="done-console-lines-container"></div>
+          </div>
+
+          <div class="result">
+            <div class="chk" id="result-status-indicator"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m5 13 4 4 10-12"/></svg></div>
+            <div class="r-meta">
+              <div class="t" id="result-meta-title">Task completed</div>
+              <div class="s" id="result-meta-sub">finished execution</div>
+            </div>
+            <div class="view" onclick="toggleConsoleExpand()">Logs</div>
+          </div>
+          
+          <div class="stats">
+            <div class="stat"><div class="num" id="stat-lines">0</div><div class="lbl">lines</div></div>
+            <div class="stat"><div class="num" id="stat-exit">0</div><div class="lbl">exit</div></div>
+            <div class="stat"><div class="num">1:48</div><div class="lbl">elapsed</div></div>
+          </div>
+          <button class="newtask" onclick="resetTaskScreen()">Start a new task</button>
+        </div>
+      </div>
+
+      <!-- Composer sticky bar -->
+      <div class="composer">
+        <button class="plus" onclick="openSpawnLauncher()" aria-label="Spawn agent"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></button>
+        <textarea class="field" id="task-input-field" rows="1" placeholder="Message agent…" oninput="growTextarea(this)"></textarea>
+        <button class="send" id="btn-send-task" onclick="sendTask()" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN 5: OFFLINE / UNREACHABLE ============ -->
+    <div class="view-panel scr-body offline-screen" id="view-offline">
+      <div class="deadorb">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4l20 16M5 12.5a11 11 0 0 1 4-2.3M2 8.8a16 16 0 0 1 4.5-2.7M12 19h.01M8.5 15.6a6 6 0 0 1 5-1"/></svg>
+      </div>
+      <h2>Laptop unreachable</h2>
+      <p>We can't reach your laptop right now. It may be asleep, offline, or the relay connection was lost.</p>
+      <button class="btn btn-fill" id="btn-offline-retry" onclick="retryConnection()">Try again</button>
+      <button class="btn btn-ghost" onclick="unpair()">Pairing details</button>
+    </div>
+
+    <!-- ============ SPAWN SHEET OVERLAY ============ -->
+    <div class="sheet-scrim" id="spawn-sheet" onclick="closeSpawnLauncher(event)">
+      <div class="sheet">
+        <div class="grip" onclick="closeSpawnLauncher()"></div>
+        <h4>Change Project &amp; Agent</h4>
+        <div class="sh-sub">runs on your laptop</div>
+        <div class="selectrow">
+          <div class="sel" onclick="openProjectSelection()">
+            <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+            <div class="l">
+              <div class="k">Project</div>
+              <div class="v" id="sheet-project-name">Select Project</div>
+            </div>
+            <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg>
+          </div>
+          <div class="sel" onclick="openAgentSelection()">
+            <div class="ic">✦</div>
+            <div class="l">
+              <div class="k">Agent</div>
+              <div class="v" id="sheet-agent-name">Select Agent</div>
+            </div>
+            <svg class="chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg>
+          </div>
+        </div>
+        <button class="startbtn" onclick="saveSpawnSelections()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 3l14 9-14 9z"/></svg>Apply changes</button>
+      </div>
+    </div>
+
+    <!-- ============ SELECTION LIST OVERLAY SHEETS ============ -->
+    <div class="sheet-scrim" id="select-project-sheet" onclick="closeProjectSelection(event)">
+      <div class="sheet">
+        <div class="grip" onclick="closeProjectSelection()"></div>
+        <h4>Select Project</h4>
+        <div class="sh-sub">authorized folders</div>
+        <div class="option-list" id="select-project-list">
+          <!-- lists of project selection rows -->
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet-scrim" id="select-agent-sheet" onclick="closeAgentSelection(event)">
+      <div class="sheet">
+        <div class="grip" onclick="closeAgentSelection()"></div>
+        <h4>Select Agent</h4>
+        <div class="sh-sub">detected binaries</div>
+        <div class="option-list" id="select-agent-list">
+          <!-- lists of agent selection rows -->
+        </div>
+      </div>
+    </div>
+
   </div>
-  <script src="/sim/sim.js"></script>
+</div>
+
+<script>
+// --- Protocol Constants ---
+const T = {
+  CLIENT_HELLO: 'client_hello',
+  PEER_ONLINE: 'peer_online',
+  PEER_OFFLINE: 'peer_offline',
+  RELAY_ERROR: 'relay_error',
+  PING: 'ping',
+  PONG: 'pong',
+  LIST: 'list',
+  CATALOG: 'catalog',
+  SUBMIT_TASK: 'submit_task',
+  TASK_STARTED: 'task_started',
+  OUTPUT: 'output',
+  TASK_COMPLETE: 'task_complete',
+  TASK_ERROR: 'task_error'
+};
+
+// --- Application State ---
+let ws = null;
+let token = null;
+let relay = null;
+let peerOnline = false;
+let catalog = { projects: [], agents: [] };
+
+let selectedProject = null; // { id, name, path }
+let selectedAgent = null;   // { id, name, description, found }
+
+// Temporary selections in sheets
+let tempProject = null;
+let tempAgent = null;
+
+let taskState = 'input'; // 'input' | 'running' | 'done'
+let currentTaskPrompt = '';
+let activeTaskId = null;
+let taskLogCount = 0;
+let taskElapsedSeconds = 0;
+let taskElapsedInterval = null;
+let isConsoleExpanded = false;
+let isRelayConnecting = false;
+
+// --- Initialize Page ---
+window.onload = function() {
+  // Sync statusbar clock
+  updateClock();
+  setInterval(updateClock, 60000);
+
+  // Check URL params
+  const params = new URLSearchParams(window.location.search);
+  const urlToken = params.get('token');
+  const urlRelay = params.get('relay');
+
+  if (urlToken) {
+    localStorage.setItem('helm_token', urlToken);
+    token = urlToken;
+    if (urlRelay) {
+      localStorage.setItem('helm_relay', urlRelay);
+      relay = urlRelay;
+    } else {
+      const defaultRelay = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+      localStorage.setItem('helm_relay', defaultRelay);
+      relay = defaultRelay;
+    }
+    // Clean URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  } else {
+    token = localStorage.getItem('helm_token');
+    relay = localStorage.getItem('helm_relay');
+  }
+
+  // Pre-fill fields on Scan screen
+  document.getElementById('scan-token-field').value = token || '';
+  const defaultRelayUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+  document.getElementById('scan-relay-field').value = relay || defaultRelayUrl;
+
+  if (token && relay) {
+    connectToRelay();
+  } else {
+    showView('view-login');
+  }
+};
+
+function updateClock() {
+  const d = new Date();
+  let h = d.getHours();
+  let m = d.getMinutes();
+  const timeStr = (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+  document.getElementById('header-time').textContent = timeStr;
+}
+
+// --- Navigation ---
+function showView(viewId) {
+  document.querySelectorAll('.view-panel').forEach(view => {
+    view.classList.toggle('active', view.id === viewId);
+  });
+}
+
+function goToScan() {
+  showView('view-scan');
+}
+
+function goBackToLogin() {
+  showView('view-login');
+}
+
+function goBackToDashboard() {
+  // Reset tab to projects
+  activateTab('projects');
+  showView('view-dashboard');
+}
+
+function activateTab(tabName) {
+  document.querySelectorAll('.tabpane').forEach(pane => {
+    pane.classList.toggle('active', pane.id === 'pane-' + tabName);
+  });
+  document.querySelectorAll('.tabbar .tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.tab === tabName);
+  });
+}
+
+// --- Pairing Forms ---
+function submitPairing() {
+  const tokenVal = document.getElementById('scan-token-field').value.trim();
+  let relayVal = document.getElementById('scan-relay-field').value.trim();
+  const errorEl = document.getElementById('scan-error');
+
+  errorEl.textContent = '';
+
+  if (!tokenVal) {
+    errorEl.textContent = 'Token is required.';
+    return;
+  }
+  if (!relayVal) {
+    relayVal = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+  }
+  if (!/^wss?:\/\//i.test(relayVal)) {
+    errorEl.textContent = 'Relay URL must start with ws:// or wss://';
+    return;
+  }
+
+  localStorage.setItem('helm_token', tokenVal);
+  localStorage.setItem('helm_relay', relayVal);
+  token = tokenVal;
+  relay = relayVal;
+
+  connectToRelay();
+}
+
+function unpair() {
+  localStorage.removeItem('helm_token');
+  localStorage.removeItem('helm_relay');
+  token = null;
+  relay = null;
+  if (ws) {
+    try { ws.close(); } catch(e) {}
+  }
+  selectedProject = null;
+  selectedAgent = null;
+  catalog = { projects: [], agents: [] };
+  showView('view-login');
+}
+
+// --- WebSocket Connection ---
+function connectToRelay() {
+  if (ws) {
+    try { ws.close(); } catch(e) {}
+  }
+
+  isRelayConnecting = true;
+  document.getElementById('dashboard-status-badge').innerHTML = '<span class="dot warn"></span>Connecting…';
+  document.getElementById('header-paired-dot').className = 'dot warn';
+  
+  // Show reconnecting bar if we are inside dashboard/task
+  const activeView = document.querySelector('.view-panel.active');
+  if (activeView && (activeView.id === 'view-dashboard' || activeView.id === 'view-task')) {
+    document.getElementById('reconnectBar').style.display = 'flex';
+  }
+
+  document.getElementById('settings-relay-label').textContent = hostOf(relay);
+
+  try {
+    ws = new WebSocket(relay);
+  } catch (err) {
+    onRelayConnectionError();
+    return;
+  }
+
+  ws.onopen = function() {
+    isRelayConnecting = false;
+    send(T.CLIENT_HELLO, { token });
+  };
+
+  ws.onclose = function() {
+    isRelayConnecting = false;
+    peerOnline = false;
+    document.getElementById('header-paired-dot').className = 'dot';
+    document.getElementById('dashboard-status-badge').innerHTML = '<span class="dot"></span>Offline';
+    
+    // If we have token, show offline view after delay or immediately if lost completely
+    const view = document.querySelector('.view-panel.active');
+    if (view && view.id !== 'view-login' && view.id !== 'view-scan') {
+      showView('view-offline');
+      document.getElementById('reconnectBar').style.display = 'none';
+    }
+  };
+
+  ws.onerror = function() {
+    onRelayConnectionError();
+  };
+
+  ws.onmessage = function(ev) {
+    let msg;
+    try {
+      msg = JSON.parse(ev.data);
+    } catch(e) {
+      return;
+    }
+    handleMessage(msg);
+  };
+}
+
+function onRelayConnectionError() {
+  isRelayConnecting = false;
+  peerOnline = false;
+  document.getElementById('header-paired-dot').className = 'dot';
+  const view = document.querySelector('.view-panel.active');
+  if (view && view.id !== 'view-login' && view.id !== 'view-scan') {
+    showView('view-offline');
+    document.getElementById('reconnectBar').style.display = 'none';
+  }
+}
+
+function send(type, payload = {}) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    try {
+      ws.send(JSON.stringify({ type, ...payload }));
+    } catch(e) {}
+  }
+}
+
+function retryConnection() {
+  const retryBtn = document.getElementById('btn-offline-retry');
+  const origText = retryBtn.innerHTML;
+  retryBtn.innerHTML = '<svg class="ring" style="filter:invert(1)" viewBox="0 0 24 24"><circle class="bg" cx="12" cy="12" r="9"/><circle class="fg" cx="12" cy="12" r="9"/></svg> Trying…';
+  retryBtn.style.pointerEvents = 'none';
+
+  connectToRelay();
+
+  setTimeout(() => {
+    retryBtn.innerHTML = origText;
+    retryBtn.style.pointerEvents = '';
+  }, 1500);
+}
+
+// --- Protocol Messages Handler ---
+function handleMessage(msg) {
+  switch (msg.type) {
+    case T.PEER_ONLINE:
+      peerOnline = true;
+      document.getElementById('reconnectBar').style.display = 'none';
+      document.getElementById('header-paired-dot').className = 'dot live';
+      document.getElementById('dashboard-status-badge').innerHTML = '<span class="dot live"></span>Connected';
+      
+      const activeView = document.querySelector('.view-panel.active');
+      if (activeView && activeView.id === 'view-offline') {
+        showView('view-dashboard');
+      } else if (activeView && activeView.id === 'view-scan') {
+        showView('view-dashboard');
+      }
+      
+      // Auto fetch project list
+      send(T.LIST);
+      break;
+
+    case T.PEER_OFFLINE:
+      peerOnline = false;
+      document.getElementById('header-paired-dot').className = 'dot';
+      document.getElementById('dashboard-status-badge').innerHTML = '<span class="dot"></span>Laptop Offline';
+      showView('view-offline');
+      document.getElementById('reconnectBar').style.display = 'none';
+      break;
+
+    case T.RELAY_ERROR:
+      console.error('[relay error]', msg.message);
+      break;
+
+    case T.CATALOG:
+      catalog.projects = msg.projects || [];
+      catalog.agents = msg.agents || [];
+      renderCatalog();
+      break;
+
+    case T.TASK_STARTED:
+      activeTaskId = msg.taskId;
+      taskLogCount = 0;
+      break;
+
+    case T.OUTPUT:
+      appendConsoleLine(msg.chunk, msg.stream);
+      break;
+
+    case T.TASK_COMPLETE:
+      onTaskFinished(true, msg.code);
+      break;
+
+    case T.TASK_ERROR:
+      appendConsoleLine('\n[Error] ' + msg.message, 'stderr');
+      onTaskFinished(false, msg.message);
+      break;
+  }
+}
+
+// --- UI Rendering ---
+function renderCatalog() {
+  // Update section headings
+  document.getElementById('projects-count-sub').textContent = catalog.projects.length + ' directories authorized';
+  
+  // Projects List
+  const projContainer = document.getElementById('projects-list-container');
+  projContainer.innerHTML = '';
+  if (!catalog.projects.length) {
+    projContainer.innerHTML = '<div style="color:var(--ink-lo); font-size:13px; text-align:center; padding:24px 0;">No projects authorized on the laptop yet.</div>';
+  } else {
+    catalog.projects.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.onclick = () => selectProjectAndOpenTask(p.id);
+      
+      card.innerHTML = `
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></div>
+        <div class="meta">
+          <div class="nm">${escapeHtml(p.name)}</div>
+          <div class="pth">${escapeHtml(p.path)}</div>
+          <div class="st"><span class="dot"></span>authorized</div>
+        </div>
+        <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 6 6 6-6 6"/></svg>
+      `;
+      projContainer.appendChild(card);
+    });
+  }
+
+  // Agents List
+  const agentsContainer = document.getElementById('agents-list-container');
+  agentsContainer.innerHTML = '';
+  if (!catalog.agents.length) {
+    agentsContainer.innerHTML = '<div style="color:var(--ink-lo); font-size:13px; text-align:center; padding:24px 0;">No agents detected on the laptop.</div>';
+  } else {
+    catalog.agents.forEach(a => {
+      const card = document.createElement('div');
+      card.className = 'card agent-row' + (a.found ? '' : ' disabled');
+      if (a.found) {
+        card.onclick = () => selectAgent(a.id);
+      }
+      
+      card.innerHTML = `
+        <div class="ic">${a.id === 'codex' ? '&lt;/&gt;' : '✦'}</div>
+        <div class="meta">
+          <div class="nm">${escapeHtml(a.name)} ${a.found ? `<span class="tag">detected</span>` : `<span class="tag off">dimmed</span>`}</div>
+          <div class="desc">${escapeHtml(a.description || 'Coding subprocess agent.')}</div>
+        </div>
+      `;
+      agentsContainer.appendChild(card);
+    });
+  }
+
+  // Pre-select defaults if not set
+  if (!selectedProject && catalog.projects.length) {
+    selectedProject = catalog.projects[0];
+  }
+  if (!selectedAgent && catalog.agents.length) {
+    const foundAgent = catalog.agents.find(a => a.found);
+    if (foundAgent) selectedAgent = foundAgent;
+  }
+  
+  updateSpawnSheetInfo();
+}
+
+function selectProjectAndOpenTask(projectId) {
+  const p = catalog.projects.find(x => x.id === projectId);
+  if (p) {
+    selectedProject = p;
+    // Auto-select first found agent if none selected
+    if (!selectedAgent && catalog.agents.length) {
+      const foundAgent = catalog.agents.find(a => a.found);
+      if (foundAgent) selectedAgent = foundAgent;
+    }
+    
+    updateSpawnSheetInfo();
+    openTaskScreen();
+  }
+}
+
+function selectAgent(agentId) {
+  const a = catalog.agents.find(x => x.id === agentId);
+  if (a && a.found) {
+    selectedAgent = a;
+    updateSpawnSheetInfo();
+    activateTab('projects'); // Switch back to projects tab
+  }
+}
+
+// --- Task Spawner Screen ---
+function openTaskScreen() {
+  if (!selectedProject || !selectedAgent) {
+    openSpawnLauncher();
+    return;
+  }
+
+  document.getElementById('crumb-project-name').textContent = selectedProject.name;
+  document.getElementById('prompt-project-name').textContent = selectedProject.name;
+  document.getElementById('prompt-agent-name').textContent = selectedAgent.name;
+  document.getElementById('task-input-field').placeholder = 'Message ' + selectedAgent.name + '…';
+
+  resetTaskScreenState();
+  showView('view-task');
+}
+
+function resetTaskScreenState() {
+  taskState = 'input';
+  document.getElementById('task-status-badge').innerHTML = '<span class="dot live"></span>Ready';
+  
+  // Toggle states
+  setTaskCmode('input');
+
+  document.getElementById('task-input-field').value = '';
+  growTextarea(document.getElementById('task-input-field'));
+  document.getElementById('btn-send-task').disabled = true;
+
+  document.getElementById('console-lines-container').innerHTML = '';
+  document.getElementById('done-console-lines-container').innerHTML = '';
+  
+  if (taskElapsedInterval) clearInterval(taskElapsedInterval);
+  taskElapsedSeconds = 0;
+  linesCount = 0;
+  isConsoleExpanded = false;
+  document.getElementById('disclose-btn').classList.remove('open');
+  document.getElementById('disclose-text').textContent = 'Show logs';
+  document.getElementById('done-console-box').style.display = 'none';
+}
+
+function setTaskCmode(mode) {
+  document.querySelectorAll('#view-task .cmode').forEach(el => {
+    el.classList.toggle('active', el.dataset.cmode === mode);
+  });
+}
+
+function growTextarea(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 96) + 'px';
+  document.getElementById('btn-send-task').disabled = !el.value.trim();
+}
+
+function sendTask() {
+  const inputEl = document.getElementById('task-input-field');
+  const prompt = inputEl.value.trim();
+  if (!prompt || !selectedProject || !selectedAgent || !peerOnline) return;
+
+  currentTaskPrompt = prompt;
+  
+  // Transition to running UI
+  document.getElementById('running-user-prompt').textContent = prompt;
+  document.getElementById('running-agent-label').textContent = selectedAgent.name + ' · working';
+  document.getElementById('console-title').textContent = 'console · live';
+  document.getElementById('console-sub-label').textContent = selectedProject.name;
+  
+  document.getElementById('task-status-badge').innerHTML = '<svg class="ring" viewBox="0 0 24 24"><circle class="bg" cx="12" cy="12" r="9"/><circle class="fg" cx="12" cy="12" r="9"/></svg> Running';
+
+  document.getElementById('console-lines-container').innerHTML = '';
+  document.getElementById('done-console-lines-container').innerHTML = '';
+  
+  setTaskCmode('running');
+  taskState = 'running';
+
+  // Stagger inputs
+  inputEl.value = '';
+  growTextarea(inputEl);
+  inputEl.blur();
+
+  // Reset counters & start timer
+  linesCount = 0;
+  taskElapsedSeconds = 0;
+  document.getElementById('stat-time').textContent = '0:00';
+  document.getElementById('stat-lines').textContent = '0';
+  document.getElementById('stat-exit').textContent = '—';
+  
+  if (taskElapsedInterval) clearInterval(taskElapsedInterval);
+  taskElapsedInterval = setInterval(() => {
+    taskElapsedSeconds++;
+    const m = Math.floor(taskElapsedSeconds / 60);
+    const s = taskElapsedSeconds % 60;
+    document.getElementById('stat-time').textContent = m + ':' + (s < 10 ? '0' + s : s);
+  }, 1000);
+
+  // Submit task wire message
+  send(T.SUBMIT_TASK, {
+    projectId: selectedProject.id,
+    agentId: selectedAgent.id,
+    task: prompt
+  });
+}
+
+function appendConsoleLine(chunk, stream) {
+  const container = document.getElementById('console-lines-container');
+  const doneContainer = document.getElementById('done-console-lines-container');
+
+  const div = document.createElement('div');
+  div.className = 'cline';
+  
+  if (stream === 'stderr') {
+    div.innerHTML = `<span class="err" style="color:#e06a5a;">${escapeHtml(chunk)}</span>`;
+  } else if (chunk.startsWith('$') || chunk.startsWith('▶') || chunk.startsWith('✓') || chunk.startsWith('✗')) {
+    div.innerHTML = `<span class="ok" style="color:var(--ink-hi); font-weight:500;">${escapeHtml(chunk)}</span>`;
+  } else if (chunk.includes('Analyzing') || chunk.includes('Planning') || chunk.includes('indexing')) {
+    div.innerHTML = `<span class="mut" style="color:var(--ink-lo);">${escapeHtml(chunk)}</span>`;
+  } else {
+    div.textContent = chunk;
+  }
+
+  // Append clone to both so logs are kept when we transition to done
+  container.appendChild(div);
+  doneContainer.appendChild(div.cloneNode(true));
+  
+  container.scrollTop = container.scrollHeight;
+  doneContainer.scrollTop = doneContainer.scrollHeight;
+
+  linesCount++;
+  document.getElementById('stat-lines').textContent = linesCount;
+}
+
+function onTaskFinished(success, codeOrMsg) {
+  if (taskElapsedInterval) clearInterval(taskElapsedInterval);
+  
+  taskState = 'done';
+  document.getElementById('done-user-prompt').textContent = currentTaskPrompt;
+  document.getElementById('done-agent-label').textContent = selectedAgent.name;
+
+  const statusEl = document.getElementById('task-status-badge');
+  const indEl = document.getElementById('result-status-indicator');
+  const titleEl = document.getElementById('result-meta-title');
+  const subEl = document.getElementById('result-meta-sub');
+  
+  if (success) {
+    statusEl.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink-hi)" stroke-width="2.6"><path d="m5 13 4 4 10-12"/></svg> Done';
+    indEl.className = 'chk';
+    indEl.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="m5 13 4 4 10-12"/></svg>';
+    titleEl.textContent = 'Task completed';
+    subEl.textContent = 'exit code ' + codeOrMsg;
+    document.getElementById('stat-exit').textContent = codeOrMsg;
+  } else {
+    statusEl.innerHTML = '<span style="color:#e06a5a; font-weight:bold;">✗ Error</span>';
+    indEl.className = 'chk fail';
+    indEl.innerHTML = '✗';
+    titleEl.textContent = 'Task failed';
+    subEl.textContent = codeOrMsg || 'internal execution error';
+    document.getElementById('stat-exit').textContent = 'err';
+  }
+
+  // Update disclosures
+  document.getElementById('disclose-text').textContent = `${linesCount} log lines`;
+
+  setTaskCmode('done');
+}
+
+function toggleConsoleExpand() {
+  isConsoleExpanded = !isConsoleExpanded;
+  const btn = document.getElementById('disclose-btn');
+  const box = document.getElementById('done-console-box');
+  
+  btn.classList.toggle('open', isConsoleExpanded);
+  box.style.display = isConsoleExpanded ? 'flex' : 'none';
+  document.getElementById('disclose-text').textContent = isConsoleExpanded ? 'Hide logs' : `${linesCount} log lines`;
+  
+  if (isConsoleExpanded) {
+    const container = document.getElementById('done-console-lines-container');
+    container.scrollTop = container.scrollHeight;
+  }
+}
+
+function resetTaskScreen() {
+  resetTaskScreenState();
+}
+
+// --- Spawn Launcher Overlay ---
+function openSpawnLauncher() {
+  tempProject = selectedProject;
+  tempAgent = selectedAgent;
+  updateSpawnSheetInfo();
+  document.getElementById('spawn-sheet').classList.add('open');
+}
+
+function closeSpawnLauncher(e) {
+  if (e && e.target !== e.currentTarget && !e.target.classList.contains('grip')) return;
+  document.getElementById('spawn-sheet').classList.remove('open');
+}
+
+function updateSpawnSheetInfo() {
+  const pName = tempProject ? tempProject.name : (selectedProject ? selectedProject.name : 'Select Project');
+  const aName = tempAgent ? tempAgent.name : (selectedAgent ? selectedAgent.name : 'Select Agent');
+
+  document.getElementById('sheet-project-name').textContent = pName;
+  document.getElementById('sheet-agent-name').textContent = aName;
+}
+
+function saveSpawnSelections() {
+  if (tempProject) selectedProject = tempProject;
+  if (tempAgent) selectedAgent = tempAgent;
+  
+  document.getElementById('spawn-sheet').classList.remove('open');
+  openTaskScreen();
+}
+
+// --- Sub Selection Sheets ---
+function openProjectSelection() {
+  const listEl = document.getElementById('select-project-list');
+  listEl.innerHTML = '';
+
+  catalog.projects.forEach(p => {
+    const div = document.createElement('div');
+    div.className = 'option-item' + (tempProject && tempProject.id === p.id ? ' selected' : '');
+    div.onclick = () => {
+      tempProject = p;
+      updateSpawnSheetInfo();
+      closeProjectSelection();
+    };
+    div.innerHTML = `
+      <div>
+        <div class="name">${escapeHtml(p.name)}</div>
+        <div class="path">${escapeHtml(p.path)}</div>
+      </div>
+      ${tempProject && tempProject.id === p.id ? '✓' : ''}
+    `;
+    listEl.appendChild(div);
+  });
+
+  document.getElementById('select-project-sheet').classList.add('open');
+}
+
+function closeProjectSelection(e) {
+  if (e && e.target !== e.currentTarget && !e.target.classList.contains('grip')) return;
+  document.getElementById('select-project-sheet').classList.remove('open');
+}
+
+function openAgentSelection() {
+  const listEl = document.getElementById('select-agent-list');
+  listEl.innerHTML = '';
+
+  catalog.agents.filter(a => a.found).forEach(a => {
+    const div = document.createElement('div');
+    div.className = 'option-item' + (tempAgent && tempAgent.id === a.id ? ' selected' : '');
+    div.onclick = () => {
+      tempAgent = a;
+      updateSpawnSheetInfo();
+      closeAgentSelection();
+    };
+    div.innerHTML = `
+      <div>
+        <div class="name">${escapeHtml(a.name)}</div>
+        <div class="path" style="font-family:var(--ui);">${escapeHtml(a.description)}</div>
+      </div>
+      ${tempAgent && tempAgent.id === a.id ? '✓' : ''}
+    `;
+    listEl.appendChild(div);
+  });
+
+  document.getElementById('select-agent-sheet').classList.add('open');
+}
+
+function closeAgentSelection(e) {
+  if (e && e.target !== e.currentTarget && !e.target.classList.contains('grip')) return;
+  document.getElementById('select-agent-sheet').classList.remove('open');
+}
+
+function toggleKeepAwake() {
+  const sw = document.getElementById('sw-keepawake');
+  const turnOn = !sw.classList.contains('on');
+  sw.classList.toggle('on', turnOn);
+}
+
+// --- Utilities ---
+function hostOf(url) {
+  if (!url) return '—';
+  try {
+    const u = new URL(url);
+    return u.host;
+  } catch(e) {
+    return url.replace(/^wss?:\/\//i, '');
+  }
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+</script>
 </body>
 </html>

@@ -51,7 +51,15 @@ let filePath = null;
 
 function file() {
   if (!filePath) {
-    filePath = path.join(app.getPath('userData'), 'termwork-settings.json');
+    filePath = path.join(app.getPath('userData'), 'helm-settings.json');
+    const oldPath = path.join(app.getPath('userData'), 'termwork-settings.json');
+    if (!fs.existsSync(filePath) && fs.existsSync(oldPath)) {
+      try {
+        fs.renameSync(oldPath, filePath);
+      } catch (err) {
+        console.error('[settings] failed to migrate settings file:', err);
+      }
+    }
   }
   return filePath;
 }

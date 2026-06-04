@@ -9,161 +9,330 @@
 <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="mode-full">
-  <!-- ===================== TOP BAR ===================== -->
-  <header class="topbar">
-    <div class="brand">
-      <div class="mark">HELM</div>
-      <div class="brand-id">
-        <span class="brand-name">HELM</span>
-        <span class="brand-tag">brutally awake mode</span>
-      </div>
-    </div>
+
+<!-- ===================== FULL WINDOW ===================== -->
+<div class="app-full" id="appFull">
+
+  <!-- title bar -->
+  <div class="titlebar">
+    <div class="lights"><span class="light"></span><span class="light"></span><span class="light"></span></div>
+    <div class="tb-brand"><div class="helm-glyph">&gt;_</div><b>HELM</b><span class="ver" id="tbVer">desktop</span></div>
+    <div class="tb-spacer"></div>
+    <span class="pill off" id="connPill"><span class="dot hollow" id="connDot"></span><span id="connText">Awaiting device</span></span>
     <div class="winbtns">
-      <button id="btn-settings" class="wb" title="Settings" aria-label="Settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 13a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 0 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.55-1H3a2 2 0 0 1 0-4h.09a1.7 1.7 0 0 0 1.55-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1-1.55V3a2 2 0 0 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 0 1 0 4h-.09a1.7 1.7 0 0 0-1.55 1Z"/></svg>
-      </button>
-      <span class="wb-divider"></span>
-      <button id="btn-shrink" class="wb" title="Shrink to mini" aria-label="Shrink to mini">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="9" width="11" height="11" rx="1"/><path d="M14 4h6v6"/><path d="M20 4l-7 7"/></svg>
-      </button>
-      <button id="btn-min" class="wb win-only" title="Minimize to tray" aria-label="Minimize">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg>
-      </button>
-      <button id="btn-max" class="wb win-only" title="Maximize" aria-label="Maximize">
-        <svg class="i-max" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="5.5" y="5.5" width="13" height="13" rx="1.5"/></svg>
-        <svg class="i-restore" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="8" y="8" width="10.5" height="10.5" rx="1.5"/><path d="M5.5 15.5V7a1.5 1.5 0 0 1 1.5-1.5h8.5"/></svg>
-      </button>
-      <button id="btn-close" class="wb win-only close" title="Close to tray" aria-label="Close to tray">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
+      <button class="winbtn" id="btn-min" title="Minimize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/></svg></button>
+      <button class="winbtn" id="btn-max" title="Maximize"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="5" width="14" height="14" rx="2"/></svg></button>
+      <button class="winbtn close" id="btn-close" title="Close to tray"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
     </div>
-  </header>
+  </div>
 
-  <!-- ===================== DASHBOARD (full) ===================== -->
-  <main id="view-main" class="view">
+  <!-- keep-awake strip -->
+  <div class="awstrip" id="awstrip">
+    <span class="awdot"></span><b id="awstripText">System sleep normal</b><span class="sep">·</span><span id="awstripSub">no agent running</span>
+  </div>
 
-    <!-- hero: giant timer + toggle below it -->
-    <section class="hero">
-      <div class="kicker" id="kicker">Idle</div>
-      <div class="clock" id="clock">00:00<span class="sec">:00</span></div>
-      <div class="substate">
-        <span class="dot ring" id="sdot"></span>
-        <span id="stext">No sleep · screen stays on · lid does nothing</span>
+  <div class="wbody">
+    <!-- sidebar -->
+    <nav class="sidebar">
+      <div class="nav-cap">Setup</div>
+      <div class="nav-item active" data-view="pairing">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><path d="M14 14h3v3M21 21v.01M21 17v.01M17 21v.01"/></svg>
+        Pairing
       </div>
-      <div class="warn" id="hero-warn" hidden>Keep the laptop ventilated — a closed lid traps heat.</div>
-      <div class="switch">
-        <button class="toggle" id="toggle" role="switch" aria-checked="false" aria-label="Keep agents alive">
-          <span class="knob"></span>
-        </button>
-        <span class="switch-lbl" id="switch-lbl">Keep awake</span>
+      <div class="nav-item" data-view="projects">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Projects <span class="badge" id="badge-projects">0</span>
       </div>
-    </section>
+      <div class="nav-item" data-view="agents">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg>
+        Agents <span class="badge" id="badge-agents">0</span>
+      </div>
+      <div class="nav-item" data-view="status">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>
+        Status
+      </div>
+      <div class="nav-item" data-view="awake">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>
+        Awake
+      </div>
+      <div class="nav-item" data-view="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.6-2-3.4-2.3 1a7 7 0 0 0-1.7-1l-.4-2.5H9.5L9 5.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.4L5 11a7 7 0 0 0 0 2l-2 1.6 2 3.4 2.3-1a7 7 0 0 0 1.7 1l.5 2.5h4l.4-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.4-2-1.6a7 7 0 0 0 .1-1z"/></svg>
+        Settings
+      </div>
+      <div class="nav-foot">
+        <div class="av" id="navAv">VS</div>
+        <div class="nf-meta"><div class="nm" id="navName">This laptop</div><div class="em" id="navDevice">HELM Desktop</div></div>
+      </div>
+    </nav>
 
-    <!-- ===== HELM agent control ===== -->
-    <section class="panel" id="panel-pairing">
-      <div class="panel-head">
-        <h3>Pair a phone</h3>
-        <span class="relay-status">
-          <span class="dot ring" id="relay-dot"></span>
-          <span id="relay-text">connecting…</span>
-        </span>
-      </div>
-      <div class="pair-body">
-        <img id="qr" class="qr" alt="Pairing QR code" />
-        <div class="pair-meta">
-          <span class="flabel">Token</span>
-          <code id="pair-token" class="token">—</code>
-          <span class="flabel">Relay</span>
-          <span id="pair-relay" class="muted small">—</span>
-          <button class="btn-ghost sm" id="btn-copy-token">Copy token</button>
+    <!-- content -->
+    <div class="content">
+
+      <!-- ===== PAIRING ===== -->
+      <section class="view active" id="view-pairing">
+        <div class="chead">
+          <div>
+            <h2>Pair your phone.</h2>
+            <p class="csub">Open HELM on your phone and scan this code. Pairing persists — you only do this once.</p>
+          </div>
         </div>
-      </div>
-    </section>
+        <div class="pair-grid">
+          <div class="qr-card">
+            <div class="glow"></div>
+            <div class="qr-frame"><img id="qr-img" alt="Pairing QR code" /></div>
+            <div class="qr-cap">
+              <div class="wait" id="pairWait"><span class="dot live"></span>Waiting for a device to scan…</div>
+              <div class="small">This window stays open until your phone connects.</div>
+              <button class="btn btn-ghost sm" id="btn-refresh-qr">Generate new code</button>
+            </div>
+          </div>
+          <div class="pair-side">
+            <div class="codebox">
+              <div class="lbl">Pairing code</div>
+              <div class="pair-code-display" id="pair-code">&mdash; &mdash; &mdash;</div>
+              <div class="tokenrow">
+                <div class="tokenval small" id="pair-token">&mdash;</div>
+                <button class="btn btn-ghost sm" id="btn-copy-token">Copy</button>
+              </div>
+              <div class="relayval">relay &middot; <span id="pair-relay">&mdash;</span></div>
+            </div>
+            <div class="steps">
+              <div class="step"><div class="n">1</div><div class="stx">Open <b>HELM</b> on your phone and tap <b>Pair with laptop</b>.</div></div>
+              <div class="step"><div class="n">2</div><div class="stx">Point the camera at this QR code.</div></div>
+              <div class="step"><div class="n">3</div><div class="stx">Your approved projects appear instantly on the phone.</div></div>
+              <div class="reassure" style="margin-top:auto">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                Code &amp; credentials never leave this laptop.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <section class="panel" id="panel-projects">
-      <div class="panel-head">
-        <h3>Projects</h3>
-        <button class="btn-ghost sm" id="btn-add-project">+ Add folder</button>
-      </div>
-      <ul class="plist" id="project-list">
-        <li class="empty">No folders exposed yet.</li>
-      </ul>
-    </section>
+      <!-- ===== PROJECTS ===== -->
+      <section class="view" id="view-projects">
+        <div class="chead">
+          <div>
+            <h2>Authorized projects</h2>
+            <p class="csub mono" id="projects-sub">agents may run only inside these</p>
+          </div>
+          <button class="btn btn-fill" id="btn-add-project"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Authorize directory</button>
+        </div>
+        <div class="rows" id="project-list"></div>
+        <div class="ghost-row" id="ghost-add-project">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+          Authorize a directory…
+        </div>
+        <div class="iso-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+          <span><b>Directory isolation.</b> Agents are spawned only inside the folders above — nothing else on this laptop is reachable from your phone.</span>
+        </div>
+      </section>
 
-    <section class="panel" id="panel-agents">
-      <div class="panel-head"><h3>Agents detected</h3></div>
-      <div class="chips" id="agent-list"><span class="muted small">scanning…</span></div>
-    </section>
-  </main>
+      <!-- ===== AGENTS ===== -->
+      <section class="view" id="view-agents">
+        <div class="chead">
+          <div>
+            <h2>Detected agents</h2>
+            <p class="csub mono" id="agents-sub">scanned this laptop</p>
+          </div>
+          <button class="btn btn-ghost" id="btn-rescan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg>Re-scan</button>
+        </div>
+        <div class="rows" id="agent-list"></div>
+        <div class="iso-note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+          <span>Only agents found on this laptop are offered to your phone. Install a CLI and hit <b>Re-scan</b> to enable it.</span>
+        </div>
+      </section>
 
-  <!-- ===================== MINI WIDGET ===================== -->
-  <div id="miniview" class="miniview">
-    <button id="btn-expand" class="mini-expand" title="Expand" aria-label="Expand to full">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6"/><path d="M20 4l-8 8"/><path d="M10 20H4v-6"/><path d="M4 20l8-8"/></svg>
-    </button>
-    <div class="mini-row">
-      <span class="dot ring" id="mini-dot"></span>
-      <span class="mini-clock" id="mini-clock">00:00</span>
+      <!-- ===== STATUS + LIVE RUN ===== -->
+      <section class="view" id="view-status">
+        <div class="chead">
+          <div>
+            <h2>Status</h2>
+            <p class="csub mono">relay link · paired device · live agent run</p>
+          </div>
+        </div>
+        <div class="status-grid">
+          <div class="status-left">
+            <div class="awake-mini" id="status-awake-mini">
+              <div class="ab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></div>
+              <div class="am">
+                <div class="t">Awake Mode <span class="tag" id="status-awake-tag">Off</span></div>
+                <div class="s" id="status-awake-sub">normal sleep · no agent running</div>
+              </div>
+              <div class="open">Open<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 6 6 6-6 6"/></svg></div>
+            </div>
+            <div class="stat-tiles">
+              <div class="tile"><div class="tl"><span class="dot dim" id="tile-relay-dot" style="width:6px;height:6px"></span>Relay</div><div class="tv" id="tile-relay">Offline</div></div>
+              <div class="tile"><div class="tl">Paired</div><div class="tv" id="tile-paired">—</div></div>
+              <div class="tile"><div class="tl">Agents</div><div class="tv" id="tile-agents">0 <span class="sm">ready</span></div></div>
+              <div class="tile"><div class="tl">Keep-awake</div><div class="tv" id="tile-awake">Off</div></div>
+            </div>
+            <div class="relay-card">
+              <h4><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M5 12.5a11 11 0 0 1 14 0M8.5 16a6 6 0 0 1 7 0M2 9a16 16 0 0 1 20 0"/><circle cx="12" cy="19" r="1" fill="currentColor"/></svg>Connection</h4>
+              <div class="kv"><span class="k">Relay endpoint</span><span class="v" id="kv-relay">—</span></div>
+              <div class="kv"><span class="k">Session</span><span class="v" id="kv-session">—</span></div>
+              <div class="kv"><span class="k">Transport</span><span class="v">WebSocket</span></div>
+            </div>
+          </div>
+          <div class="status-right">
+            <div class="console" id="status-console">
+              <div class="chead2">
+                <span class="run" id="console-run"><span class="dot dim" style="width:6px;height:6px"></span>No agent running</span>
+                <span>console</span>
+              </div>
+              <div class="lines" id="deskConsole"><div class="cline idle">Idle — submit a task from your phone to see it stream here.</div></div>
+              <div class="cfoot">
+                <span class="who" id="console-who">waiting for a task…</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== AWAKE MODE ===== -->
+      <section class="view" id="view-awake">
+        <div class="chead">
+          <div>
+            <h2>Awake Mode</h2>
+            <p class="csub">One switch holds this laptop awake so your agents keep running while you're away. It flips off the moment everything goes idle.</p>
+          </div>
+        </div>
+        <div class="awake-grid">
+          <div class="awake-btn-card">
+            <div class="glow"></div>
+            <button class="awake-toggle" id="awakeToggle" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg>
+              <span class="st" id="awakeState">OFF</span>
+            </button>
+            <div class="awake-cap">
+              <div class="t">Awake Mode</div>
+              <div class="d" id="awakeDesc">Turn on to stop this laptop sleeping while agents run.</div>
+            </div>
+          </div>
+          <div class="awake-right">
+            <div class="timer-card" id="timer-card">
+              <div class="tl"><span class="dot dim" id="timer-dot" style="width:6px;height:6px"></span>Awake for</div>
+              <div class="tbig" id="awakeTimer">00:00:00</div>
+              <div class="tsub" id="awakeTimerSub">sleep inhibitor idle</div>
+            </div>
+            <div class="awake-stats2">
+              <div class="astat">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></svg></div>
+                <div class="m"><div class="k">Paired device</div><div class="v" id="awakeDevice">—</div></div>
+              </div>
+              <div class="astat">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+                <div class="m"><div class="k">Local time</div><div class="v" id="awakeClock">—</div></div>
+              </div>
+              <div class="astat">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12.5a11 11 0 0 1 14 0M8.5 16a6 6 0 0 1 7 0M2 9a16 16 0 0 1 20 0"/></svg></div>
+                <div class="m"><div class="k">Relay</div><div class="v" id="awakeRelay">Offline</div></div>
+              </div>
+              <div class="astat">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v18M5 8l7-5 7 5M5 16l7 5 7-5"/></svg></div>
+                <div class="m"><div class="k">Agents running</div><div class="v" id="awakeAgents">0</div></div>
+              </div>
+            </div>
+            <div class="iso-note" style="margin-top:2px">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+              <span>Awake Mode restores normal sleep settings automatically the moment no agent is running — it never leaves your laptop awake for nothing.</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== SETTINGS ===== -->
+      <section class="view" id="view-settings">
+        <div class="chead">
+          <div>
+            <h2>Settings</h2>
+            <p class="csub mono">app · connection · this laptop</p>
+          </div>
+        </div>
+        <div class="set-grid">
+          <div class="set-group">
+            <div class="gl">General</div>
+            <div class="list" style="margin-bottom:22px">
+              <div class="lrow">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+                <div class="lmeta"><div class="lab" id="lbl-startup">Launch at login</div><div class="des">Start HELM in the tray on boot</div></div>
+                <div class="switch" id="set-startup"></div>
+              </div>
+              <div class="lrow">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg></div>
+                <div class="lmeta"><div class="lab">Closed-lid warning</div><div class="des">Warn when running with the lid shut</div></div>
+                <div class="switch" id="set-lidwarn"></div>
+              </div>
+              <div class="lrow">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></div>
+                <div class="lmeta"><div class="lab">Appearance</div></div>
+                <div class="val">Dark</div>
+              </div>
+            </div>
+          </div>
+          <div class="set-group">
+            <div class="gl">Connection</div>
+            <div class="list" style="margin-bottom:22px">
+              <div class="lrow">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="14" height="10" rx="2"/><path d="M7 20h8M11 15v5"/><path d="M17 9h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2"/></svg></div>
+                <div class="lmeta"><div class="lab">Paired device</div><div class="des" id="set-peer">No phone connected</div></div>
+                <div class="val" id="set-conn">—</div>
+              </div>
+              <div class="lrow">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 12.5a11 11 0 0 1 14 0M8.5 16a6 6 0 0 1 7 0M2 9a16 16 0 0 1 20 0"/></svg></div>
+                <div class="lmeta"><div class="lab">Relay server</div><div class="des">Routes messages to your phone</div></div>
+                <div class="val" id="set-relay">—</div>
+              </div>
+              <div class="lrow">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+                <div class="lmeta"><div class="lab">Secrets</div><div class="des">Code &amp; credentials stay on this laptop</div></div>
+                <div class="val">On-device</div>
+              </div>
+            </div>
+            <div class="gl">About</div>
+            <div class="list">
+              <div class="lrow">
+                <div class="ic"><div class="helm-glyph" style="width:24px;height:24px;font-size:11px;border-radius:7px">&gt;_</div></div>
+                <div class="lmeta"><div class="lab">HELM Desktop</div><div class="des">Electron · tray app</div></div>
+                <div class="val" id="about-ver">—</div>
+              </div>
+              <div class="lrow" id="btn-quit-row" style="cursor:pointer">
+                <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 12H3M7 8l-4 4 4 4M11 4h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-6"/></svg></div>
+                <div class="lmeta"><div class="lab">Quit HELM</div><div class="des">Stops the tray app &amp; restores sleep</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
     </div>
-    <div class="mini-meta" id="mini-meta">idle</div>
   </div>
+</div>
 
-  <!-- ===================== SETTINGS ===================== -->
-  <main id="view-settings" class="view hidden">
-    <button class="back" id="btn-back">← Back</button>
-    <h2 class="settings-title">Settings</h2>
+<!-- ===================== MINI WIDGET ===================== -->
+<div class="app-mini" id="appMini">
+  <div class="mab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M13 2 3 14h9l-1 8 10-12h-9z"/></svg></div>
+  <div class="mmeta">
+    <div class="mt" id="mini-title">HELM</div>
+    <div class="ms" id="mini-sub">idle</div>
+  </div>
+  <button class="mexpand" id="btn-expand" title="Expand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></button>
+</div>
 
-    <div class="setting">
-      <label class="switch-line">
-        <span id="lbl-startup">Launch at Windows startup</span>
-        <input type="checkbox" id="set-startup" />
-        <span class="mini-toggle"></span>
-      </label>
-    </div>
-
-    <div class="setting">
-      <label class="switch-line">
-        <span>Show lid-heat warning</span>
-        <input type="checkbox" id="set-lidwarn" />
-        <span class="mini-toggle"></span>
-      </label>
-    </div>
-
-    <div class="settings-actions">
-      <button class="btn-primary" id="btn-save">Save</button>
-      <button class="btn-danger" id="btn-quit">Quit HELM</button>
-    </div>
-  </main>
-
-  <!-- ===================== CONFIRM (pre-elevation) ===================== -->
-  <div id="confirm" class="overlay hidden">
-    <div class="modal">
-      <div class="modal-icon">
-        <svg viewBox="0 0 24 24" width="22" height="22"><path fill="currentColor" d="M17 9V7a5 5 0 0 0-10 0v2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1Zm-8 0V7a3 3 0 0 1 6 0v2H9Z"/></svg>
-      </div>
-      <h3 class="modal-title">Keep this machine awake?</h3>
-      <p class="modal-body" id="confirm-body">
-        HELM needs admin access to keep this machine fully awake — including
-        when the lid is closed. You'll see your system's password prompt next.
-      </p>
-      <div class="modal-actions">
-        <button class="btn-ghost" id="confirm-cancel">Cancel</button>
-        <button class="btn-primary" id="confirm-go">Continue</button>
-      </div>
+<!-- ===================== CONFIRM MODAL ===================== -->
+<div class="scrim hidden" id="confirm">
+  <div class="modal">
+    <h3 id="confirm-title">Keep this laptop awake?</h3>
+    <p id="confirm-body">HELM needs admin access to fully block sleep — including closing the lid. You'll see your system's prompt next. It's restored exactly when you turn it off.</p>
+    <div class="actions">
+      <button class="btn btn-ghost" id="confirm-cancel">Cancel</button>
+      <button class="btn btn-fill" id="confirm-go">Turn on</button>
     </div>
   </div>
+</div>
 
-  <!-- ===================== FIRST RUN ===================== -->
-  <div id="firstrun" class="overlay hidden">
-    <div class="modal fr">
-      <div class="mark fr-badge">HELM</div>
-      <h1 class="fr-title">HELM</h1>
-      <p class="fr-lede">One switch keeps this machine awake — no sleep, no screen-off, and the lid does nothing — so your background tasks and processes keep running while you're away.</p>
-      <p class="fr-note" id="fr-note">Turning it on changes the Windows lid-close setting (one admin prompt) and restores it exactly when you turn it off.</p>
-      <button class="btn-primary fr-go" id="fr-go">Get started</button>
-    </div>
-  </div>
-
-  <script src="renderer.js"></script>
+<script src="renderer.js"></script>
 </body>
 </html>

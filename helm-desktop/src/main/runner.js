@@ -27,7 +27,8 @@ const power = require('./power');
  */
 
 const isWin = process.platform === 'win32';
-const active = new Map(); // taskId -> child process
+const TASK_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes — auto-kill hung agents
+const active = new Map(); // taskId -> { child, timer, emit }
 let onChange = null;      // fired whenever the active-task count changes (UI/keep-awake)
 
 /**
@@ -87,7 +88,23 @@ function run(req, emit) {
 
   // First active task → take the keep-awake hold.
   if (active.size === 0) power.enable('agent').catch(() => {});
-  active.set(taskId, child);
+
+  // Guard: only the FIRST terminal event (error or close) emits to the phone.
+  // Node fires 'error' then 'close' on spawn failures — without this guard the
+  // phone receives both task_error AND task_complete for the same task.
+  let finished = false;
+
+  // Auto-kill after TASK_TIMEOUT_MS so a hung agent can't keep the laptop awake
+  // forever. The phone gets a clear error message.
+  const timer = setTimeout(() => {
+    if (finished) return;
+    finished = true;
+    try { child.kill(); } catch {}
+    emit('task_error', { taskId, message: `agent timed out after ${TASK_TIMEOUT_MS / 60000} minutes` });
+    finish(taskId);
+  }, TASK_TIMEOUT_MS);
+
+  active.set(taskId, { child, timer, emit });
   emit('task_started', { taskId });
   if (onChange) try { onChange(); } catch {}
 
@@ -95,10 +112,16 @@ function run(req, emit) {
   child.stderr.on('data', (d) => emit('output', { taskId, stream: 'stderr', chunk: d.toString() }));
 
   child.on('error', (err) => {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
     emit('task_error', { taskId, message: err.message });
     finish(taskId);
   });
   child.on('close', (code) => {
+    if (finished) return;
+    finished = true;
+    clearTimeout(timer);
     emit('task_complete', { taskId, code: code == null ? -1 : code });
     finish(taskId);
   });
@@ -107,16 +130,25 @@ function run(req, emit) {
 }
 
 function finish(taskId) {
+  const entry = active.get(taskId);
+  if (entry) clearTimeout(entry.timer);
   active.delete(taskId);
   // Last task done → release the keep-awake hold (won't disturb a manual 'user' hold).
   if (active.size === 0) power.disable('agent').catch(() => {});
   if (onChange) try { onChange(); } catch {}
 }
 
-/** Kill a running task (used on quit / disconnect cleanup). */
+/** Kill a running task (used on quit / disconnect cleanup).
+ *  Now emits task_error so the phone knows the task was cancelled
+ *  instead of hanging indefinitely in "running" state. */
 function cancel(taskId) {
-  const child = active.get(taskId);
-  if (child) { try { child.kill(); } catch {} }
+  const entry = active.get(taskId);
+  if (entry) {
+    clearTimeout(entry.timer);
+    try { entry.emit('task_error', { taskId, message: 'task cancelled (desktop shutting down)' }); } catch {}
+    try { entry.child.kill(); } catch {}
+    finish(taskId);
+  }
 }
 
 /** Kill everything (app quitting). */

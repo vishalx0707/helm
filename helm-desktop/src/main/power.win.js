@@ -27,7 +27,7 @@ const os = require('os');
 const SUB_BUTTONS = '4f971e89-eebd-4455-a8de-9e59040e7347'; // Power buttons and lid
 const LIDACTION   = '5ca83367-6e45-459f-a27b-476b1d01c936'; // Lid close action
 const LID_DO_NOTHING = 0;
-const ORIG_FILE = path.join(os.tmpdir(), 'termwork-lid-orig.txt');
+const ORIG_FILE = path.join(os.tmpdir(), 'helm-lid-orig.txt');
 
 function runFile(cmd, args) {
   return new Promise((resolve) => {
@@ -55,9 +55,10 @@ async function readLidAction() {
  * Run a list of fully-formed command lines elevated, in one UAC prompt.
  * Writes a temp .bat and launches it via `Start-Process -Verb RunAs -Wait`.
  * Returns { ok, denied }.
+ *
  */
 async function runElevated(lines, tag) {
-  const bat = path.join(os.tmpdir(), `termwork-${tag}-${Date.now()}.bat`);
+  const bat = path.join(os.tmpdir(), `helm-${tag}-${Date.now()}.bat`);
   fs.writeFileSync(bat, ['@echo off', ...lines].join('\r\n'), 'utf8');
   const psCommand =
     `try { $p = Start-Process -FilePath '${bat}' -Verb RunAs -WindowStyle Hidden -Wait -PassThru; exit $p.ExitCode } ` +

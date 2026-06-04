@@ -166,6 +166,76 @@ export class RelayConnection {
     this._connect();
   }
 
+  /**
+   * Redeem a 6-digit pairing code against the relay.
+   * Connects to the built-in relay, sends pair_redeem, and waits for
+   * pair_ok (which contains the durable token) or pair_error.
+   * Returns a promise that resolves with { relay, token } or rejects.
+   */
+  redeemCode(relayUrl, code) {
+    return new Promise((resolve, reject) => {
+      let ws;
+      let settled = false;
+      const timeout = setTimeout(() => {
+        if (settled) return;
+        settled = true;
+        try { ws.close(); } catch {}
+        reject(new Error('Pairing timed out \u2014 try again.'));
+      }, 15000);
+
+      try {
+        ws = new WebSocket(relayUrl);
+      } catch (e) {
+        clearTimeout(timeout);
+        reject(new Error('Cannot reach the relay server.'));
+        return;
+      }
+
+      ws.onopen = () => {
+        try {
+          ws.send(JSON.stringify({ type: T.PAIR_REDEEM, code }));
+        } catch {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timeout);
+            reject(new Error('Failed to send pairing request.'));
+          }
+        }
+      };
+
+      ws.onmessage = (ev) => {
+        let msg;
+        try { msg = JSON.parse(ev.data); } catch { return; }
+
+        if (msg.type === T.PAIR_OK && msg.token) {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
+          try { ws.close(); } catch {}
+          resolve({ relay: relayUrl, token: msg.token });
+        } else if (msg.type === T.PAIR_ERROR) {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeout);
+          try { ws.close(); } catch {}
+          reject(new Error(msg.message || 'Invalid or expired code.'));
+        }
+      };
+
+      ws.onerror = () => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeout);
+        reject(new Error('Connection error \u2014 check your network.'));
+      };
+
+      ws.onclose = () => {
+        clearTimeout(timeout);
+        // Don't reject if already settled
+      };
+    });
+  }
+
   _send(type, payload = {}) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       try {
@@ -221,14 +291,22 @@ export class RelayConnection {
           });
         }
         break;
-      case T.TASK_ERROR:
-        // task_error can arrive before task_started (e.g. rejected task), so don't gate on taskId
+      case T.TASK_ERROR: {
+        // task_error can arrive before task_started (e.g. rejected task) — in
+        // that case we don't have a taskId yet so we accept it unconditionally.
+        // But once we DO have a taskId, gate on it so a stale error from a
+        // previous/different task doesn't corrupt the current run.
+        const hasActiveTask = this.state.task.taskId != null;
+        const idMatches = msg.taskId === this.state.task.taskId;
+        if (hasActiveTask && !idMatches) break; // stale error — ignore
         this._setTask({
           status: 'error',
           message: msg.message || 'agent error',
+          taskId: msg.taskId || this.state.task.taskId,
           endedAt: Date.now(),
         });
         break;
+      }
       default:
         break;
     }

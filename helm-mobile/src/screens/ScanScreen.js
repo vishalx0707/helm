@@ -10,6 +10,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Feather } from '@expo/vector-icons';
@@ -19,25 +20,28 @@ import { colors, fonts, radius } from '../theme';
 import { parsePairingPayload } from '../protocol';
 import { savePairing } from '../lib/storage';
 import { useRelay } from '../lib/connection';
+import { BUILTIN_RELAY_URL } from '../config';
 
 /**
- * Pair with the laptop. Primary path: point the camera at the QR HELM Desktop
- * shows — it encodes { v, relay, token } (see helm-desktop/src/main/pairing.js).
- * On a successful scan we persist the pairing, point the live connection at it,
- * and drop into the dashboard.
+ * Pair with the laptop. Two paths:
  *
- * Secondary path: a manual relay-URL + token entry for development, when the
- * laptop and phone are on the same network without a tunnel.
+ * 1. **6-digit code (v2):** Scan a QR or type 6 digits. The phone redeems the
+ *    code against the built-in relay, gets the durable token, stores it, and
+ *    connects. The user never sees a URL or a long token.
+ *
+ * 2. **Legacy (v1):** Scan a QR that carries { relay, token } or a /sim URL.
+ *    Used by older desktop versions that haven't migrated to 6-digit codes.
  */
 export default function ScanScreen({ navigation }) {
   const { conn } = useRelay();
   const [permission, requestPermission] = useCameraPermissions();
   const [manual, setManual] = useState(false);
-  const [relay, setRelay] = useState('');
-  const [token, setToken] = useState('');
+  const [codeInput, setCodeInput] = useState('');
   const [error, setError] = useState('');
+  const [redeeming, setRedeeming] = useState(false);
   const handledRef = useRef(false);
 
+  /** Final step: save pairing, connect, navigate to dashboard. */
   const pair = async (pairing) => {
     if (handledRef.current) return;
     handledRef.current = true;
@@ -46,30 +50,50 @@ export default function ScanScreen({ navigation }) {
     navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
   };
 
+  /** Redeem a 6-digit code against the built-in relay, then pair. */
+  const redeemAndPair = async (code) => {
+    if (handledRef.current || redeeming) return;
+    setRedeeming(true);
+    setError('');
+    try {
+      const pairing = await conn.redeemCode(BUILTIN_RELAY_URL, code);
+      await pair(pairing);
+    } catch (e) {
+      handledRef.current = false;
+      setError(e.message || 'Pairing failed.');
+    } finally {
+      setRedeeming(false);
+    }
+  };
+
   const onScan = ({ data }) => {
-    const pairing = parsePairingPayload(data);
-    if (!pairing) {
+    if (handledRef.current || redeeming) return;
+    const result = parsePairingPayload(data);
+    if (!result) {
       setError("That QR isn't a HELM pairing code.");
       return;
     }
-    pair(pairing);
+    if (result.v === 2 && result.code) {
+      // 6-digit code from QR — redeem it
+      redeemAndPair(result.code);
+    } else if (result.relay && result.token) {
+      // Legacy v1 path
+      pair(result);
+    } else {
+      setError("That QR isn't a HELM pairing code.");
+    }
   };
 
   const onManualPair = () => {
-    const r = relay.trim();
-    const t = token.trim();
-    if (!r || !t) {
-      setError('Enter both the relay URL and the token.');
+    const code = codeInput.replace(/\s/g, '').trim();
+    if (!/^\d{6}$/.test(code)) {
+      setError('Enter a 6-digit pairing code.');
       return;
     }
-    if (!/^wss?:\/\//i.test(r)) {
-      setError('Relay URL must start with ws:// or wss://');
-      return;
-    }
-    pair({ relay: r, token: t });
+    redeemAndPair(code);
   };
 
-  const canScan = permission?.granted && !manual;
+  const canScan = permission?.granted && !manual && !redeeming;
 
   return (
     <Screen padded>
@@ -84,11 +108,11 @@ export default function ScanScreen({ navigation }) {
         >
           <View style={styles.head}>
             <Pressable onPress={() => navigation.goBack()} hitSlop={10}>
-              <Text style={styles.back}>‹  PAIRING</Text>
+              <Text style={styles.back}>‹  CONNECT</Text>
             </Pressable>
-            <Text style={styles.title}>Pair with your laptop.</Text>
+            <Text style={styles.title}>Connect a device.</Text>
             <Text style={styles.sub}>
-              Point your camera at the code shown in HELM Desktop on your laptop.
+              Scan the QR code shown in HELM Desktop, or type the 6-digit code.
             </Text>
           </View>
 
@@ -97,47 +121,55 @@ export default function ScanScreen({ navigation }) {
               granted={permission?.granted}
               onRequest={requestPermission}
               onScan={canScan ? onScan : undefined}
+              redeeming={redeeming}
             />
           )}
 
-          {manual && (
-            <View style={styles.manualBox}>
-              <Text style={styles.fieldLabel}>RELAY URL</Text>
-              <TextInput
-                value={relay}
-                onChangeText={(v) => {
-                  setRelay(v);
-                  setError('');
-                }}
-                placeholder="wss://your-relay.example"
-                placeholderTextColor={colors.inkLo}
-                autoCapitalize="none"
-                autoCorrect={false}
-                style={styles.input}
-              />
-              <Text style={[styles.fieldLabel, { marginTop: 14 }]}>PAIRING TOKEN</Text>
-              <TextInput
-                value={token}
-                onChangeText={(v) => {
-                  setToken(v);
-                  setError('');
-                }}
-                placeholder="paste token from desktop…"
-                placeholderTextColor={colors.inkLo}
-                autoCapitalize="none"
-                autoCorrect={false}
-                style={styles.input}
-              />
+          {!manual && (
+            <View style={styles.orRow}>
+              <View style={styles.orLine} />
+              <Text style={styles.orText}>or</Text>
+              <View style={styles.orLine} />
             </View>
           )}
 
+          {manual ? (
+            <View style={styles.manualBox}>
+              <Text style={styles.fieldLabel}>PAIRING CODE</Text>
+              <View style={styles.codeRow}>
+                <TextInput
+                  value={codeInput}
+                  onChangeText={(v) => {
+                    // Allow only digits, max 6
+                    const digits = v.replace(/\D/g, '').slice(0, 6);
+                    setCodeInput(digits);
+                    setError('');
+                  }}
+                  placeholder="000000"
+                  placeholderTextColor={colors.inkLo}
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  autoFocus
+                  style={styles.codeInput}
+                />
+              </View>
+            </View>
+          ) : null}
+
           {error ? <Text style={styles.error}>{error}</Text> : null}
+          {redeeming && (
+            <View style={styles.redeemRow}>
+              <ActivityIndicator color={colors.inkHi} size="small" />
+              <Text style={styles.redeemText}>Connecting…</Text>
+            </View>
+          )}
 
           <View style={{ flex: 1 }} />
 
           <Button
-            label={manual ? 'Pair device' : 'Enter code manually'}
+            label={manual ? (redeeming ? 'Pairing…' : 'Pair device') : 'Enter code manually'}
             variant={manual ? 'fill' : 'ghost'}
+            disabled={redeeming}
             onPress={
               manual
                 ? onManualPair
@@ -152,6 +184,7 @@ export default function ScanScreen({ navigation }) {
               onPress={() => {
                 setManual(false);
                 setError('');
+                handledRef.current = false;
               }}
               style={{ alignSelf: 'center', marginTop: 14 }}
             >
@@ -172,7 +205,7 @@ export default function ScanScreen({ navigation }) {
 }
 
 /** The camera viewport with animated corner brackets + a sweeping scan line. */
-function Viewport({ granted, onRequest, onScan }) {
+function Viewport({ granted, onRequest, onScan, redeeming }) {
   const sweep = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -206,13 +239,20 @@ function Viewport({ granted, onRequest, onScan }) {
         </Pressable>
       )}
 
+      {redeeming && (
+        <View style={styles.redeemOverlay}>
+          <ActivityIndicator color={colors.inkHi} size="large" />
+          <Text style={styles.redeemOverlayText}>Pairing…</Text>
+        </View>
+      )}
+
       {/* dim overlay so brackets read on a bright camera feed */}
       <View style={styles.vignette} pointerEvents="none" />
       <View style={[styles.bracket, styles.tl]} />
       <View style={[styles.bracket, styles.tr]} />
       <View style={[styles.bracket, styles.bl]} />
       <View style={[styles.bracket, styles.br]} />
-      {granted && <Animated.View style={[styles.scanline, { transform: [{ translateY }] }]} />}
+      {granted && !redeeming && <Animated.View style={[styles.scanline, { transform: [{ translateY }] }]} />}
     </View>
   );
 }
@@ -251,26 +291,46 @@ const styles = StyleSheet.create({
     opacity: 0.8,
   },
 
-  manualBox: { marginTop: 6 },
+  redeemOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(10,10,11,0.85)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  redeemOverlayText: { color: colors.inkHi, fontSize: 14, fontFamily: fonts.mono },
+
+  orRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 18, gap: 12 },
+  orLine: { flex: 1, height: 1, backgroundColor: colors.hairline },
+  orText: { color: colors.inkLo, fontSize: 12, fontFamily: fonts.mono },
+
+  manualBox: { marginTop: 6, marginBottom: 12 },
   fieldLabel: {
     fontFamily: fonts.mono,
     fontSize: 11,
     letterSpacing: 1.4,
     color: colors.inkLo,
-    marginBottom: 6,
+    marginBottom: 10,
   },
-  input: {
+  codeRow: { flexDirection: 'row', justifyContent: 'center' },
+  codeInput: {
     backgroundColor: colors.surface2,
     borderWidth: 1,
     borderColor: colors.hairline2,
     borderRadius: radius.input,
-    paddingHorizontal: 14,
-    height: 50,
+    paddingHorizontal: 24,
+    height: 64,
     color: colors.inkHi,
     fontFamily: fonts.mono,
-    fontSize: 14,
+    fontSize: 32,
+    fontWeight: '700',
+    letterSpacing: 12,
+    textAlign: 'center',
+    width: '100%',
   },
   error: { color: colors.inkHi, fontSize: 12.5, marginTop: 14, fontFamily: fonts.mono },
+  redeemRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 14, justifyContent: 'center' },
+  redeemText: { color: colors.inkMid, fontSize: 13, fontFamily: fonts.mono },
   switchLink: {
     fontSize: 13,
     color: colors.inkMid,

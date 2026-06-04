@@ -26,7 +26,9 @@ let peerOnline = false;     // a phone is paired on the other side
 let stopped = false;
 let backoff = 1000;
 let reconnectTimer = null;
+let pingTimer = null;       // app-level keepalive so the relay sees traffic
 let statusCb = null;
+let taskCb = null;
 
 function getStatus() {
   return { relayConnected: connected, peerOnline };
@@ -34,6 +36,13 @@ function getStatus() {
 
 function onStatus(cb) { statusCb = cb; }
 function emitStatus() { if (statusCb) try { statusCb(getStatus()); } catch {} }
+
+// Display-only mirror of the in-flight task to the desktop UI (the Status frame).
+// This does NOT touch the wire protocol or spawn anything — it echoes the same
+// runner events the laptop already produces locally so the renderer can show the
+// laptop side of a run. The phone still receives the authoritative stream.
+function onTask(cb) { taskCb = cb; }
+function emitTask(ev) { if (taskCb) try { taskCb(ev); } catch {} }
 
 function send(type, payload = {}) {
   if (ws && ws.readyState === WebSocket.OPEN) {
@@ -54,6 +63,12 @@ function connect() {
     connected = true;
     backoff = 1000;
     send('host_hello', { token: pairing.token() });
+    // Request a 6-digit pairing code from the relay
+    send('pair_new', {});
+    // App-level keepalive so the relay's 30s heartbeat always sees traffic.
+    // Mirrors the mobile's 20s ping. 25s avoids hitting the 30s deadline.
+    clearInterval(pingTimer);
+    pingTimer = setInterval(() => send('ping'), 25000);
     emitStatus();
   });
 
@@ -66,6 +81,7 @@ function connect() {
   ws.on('close', () => {
     connected = false;
     peerOnline = false;
+    clearInterval(pingTimer);
     emitStatus();
     scheduleReconnect();
   });
@@ -85,11 +101,20 @@ function handle(m) {
     case 'list':
       send('catalog', { projects: projects.list(), agents: agents.list() });
       break;
-    case 'submit_task':
-      runner.run(
-        { projectId: m.projectId, agentId: m.agentId, task: m.task },
-        (type, payload) => send(type, payload)
-      );
+    case 'submit_task': {
+      const meta = { projectId: m.projectId, agentId: m.agentId, task: m.task };
+      // mirror the submission to the desktop UI, then mirror every runner event
+      emitTask({ type: 'submit_task', ...meta });
+      runner.run(meta, (type, payload) => {
+        send(type, payload);          // authoritative stream to the phone
+        emitTask({ type, ...payload }); // local echo to the desktop renderer
+      });
+      break;
+    }
+    case 'pair_code':
+      // Relay returned a 6-digit code for this host
+      pairing.setCode(m.code, m.ttl);
+      emitStatus();  // tell the renderer to refresh the pairing panel
       break;
     // relay_error / pong / unknown → ignore
   }
@@ -111,6 +136,7 @@ function start() {
 function stop() {
   stopped = true;
   clearTimeout(reconnectTimer);
+  clearInterval(pingTimer);
   if (ws) { try { ws.close(); } catch {} }
 }
 
@@ -120,4 +146,9 @@ function restart() {
   start();
 }
 
-module.exports = { start, stop, restart, getStatus, onStatus };
+/** Request a fresh 6-digit pairing code without rotating the durable token. */
+function requestNewCode() {
+  send('pair_new', {});
+}
+
+module.exports = { start, stop, restart, requestNewCode, getStatus, onStatus, onTask };

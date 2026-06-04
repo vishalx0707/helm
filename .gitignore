@@ -1,6 +1,14 @@
 # dependencies & build output
 node_modules/
 release/
+# Expo prebuild output — regenerable via `expo prebuild`, hundreds of MB, and
+# contains the default debug keystore. Never commit.
+helm-mobile/android/
+helm-mobile/ios/
+
+# design mockups / visual prototypes (kept local, not part of the shipped repo)
+helm-desktop-prototype/
+helm-mobile-prototype/
 
 # logs & shell/terminal history dumps
 *.log

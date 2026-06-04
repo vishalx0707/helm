@@ -18,6 +18,7 @@ const api = {
 
   // --- HELM agent control ---
   getPairing:   () => ipcRenderer.invoke('pairing:get'),
+  regeneratePairing: () => ipcRenderer.invoke('pairing:regenerate'),
   listProjects: () => ipcRenderer.invoke('projects:list'),
   addProject:   () => ipcRenderer.invoke('projects:add'),
   removeProject:(id) => ipcRenderer.invoke('projects:remove', id),
@@ -29,6 +30,12 @@ const api = {
     const handler = (_e, status) => cb(status);
     ipcRenderer.on('relay:update', handler);
     return () => ipcRenderer.removeListener('relay:update', handler);
+  },
+  // push: live task events mirrored from the relay client (display only)
+  onTask: (cb) => {
+    const handler = (_e, ev) => cb(ev);
+    ipcRenderer.on('task:update', handler);
+    return () => ipcRenderer.removeListener('task:update', handler);
   },
 
   // window chrome (frameless custom titlebar)

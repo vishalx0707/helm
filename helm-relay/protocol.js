@@ -25,6 +25,13 @@ const T = Object.freeze({
   PING:         'ping',
   PONG:         'pong',
 
+  // --- 6-digit pairing (relay-understood) ---
+  PAIR_NEW:     'pair_new',      // host   -> relay  {}
+  PAIR_CODE:    'pair_code',     // relay  -> host   { code, ttl }
+  PAIR_REDEEM:  'pair_redeem',   // client -> relay  { code }
+  PAIR_OK:      'pair_ok',       // relay  -> client { token }
+  PAIR_ERROR:   'pair_error',    // relay  -> client { message }
+
   // --- forwarded payload (relay never inspects these) ---
   LIST:           'list',          // client -> host   {}
   CATALOG:        'catalog',       // host   -> client { projects[], agents[] }
@@ -36,8 +43,12 @@ const T = Object.freeze({
 });
 
 // The set the relay handles directly; anything else gets forwarded to the peer.
+// PEER_ONLINE, PEER_OFFLINE, and RELAY_ERROR are relay-generated — they must
+// never be forwarded from a peer, otherwise one side could spoof control messages.
 const RELAY_CONTROL = new Set([
-  T.HOST_HELLO, T.CLIENT_HELLO, T.PING, T.PONG
+  T.HOST_HELLO, T.CLIENT_HELLO, T.PING, T.PONG,
+  T.PEER_ONLINE, T.PEER_OFFLINE, T.RELAY_ERROR,
+  T.PAIR_NEW, T.PAIR_CODE, T.PAIR_REDEEM, T.PAIR_OK, T.PAIR_ERROR
 ]);
 
 module.exports = { RELAY_PORT, T, RELAY_CONTROL };
