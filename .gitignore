@@ -19,3 +19,10 @@ release/
 
 # isolated experimental work (removable without breaking core)
 /experimental/private/
+
+# internal planning & design docs (never push)
+plan.md
+product.md
+design.md
+handoff.md
+docs/LEARNINGS.md
