@@ -19,7 +19,7 @@ Before adding anything, ask: **"Does this help the user assign work to an agent 
 If the answer is no, it does not belong in the MVP. Put it in the Future Roadmap (`product.md`) instead.
 
 ## The three parts
-1. **HELM Desktop (`helm-desktop/`)** — an Electron app that sits in the system tray on the laptop. It lets the user choose which project folders are exposed, auto-detects installed agents, shows a QR code for pairing, runs agent tasks inside allowlisted folders, streams their output back, and keeps the laptop awake while an agent is running.
+1. **HELM Desktop (`helm-desktop/`)** — an Electron app that sits in the system tray on the laptop. It lets the user choose which project folders are exposed, auto-detects installed agents, shows a QR code for pairing, runs agent tasks inside allowlisted folders, streams their output back, and keeps the laptop awake while an agent is running. **Visual reference:** `helm-desktop-prototype/index.html` (B&W prototype — full window + sidebar nav + tray popover; same monochrome language as mobile). The mobile reference is `helm-mobile-prototype/index.html`.
 2. **HELM Mobile (`helm-mobile/`)** — a lightweight React Native / Expo app. It pairs by scanning the QR code, lists the approved projects, lets the user pick an agent and send a task, and shows streamed output and the final result.
 3. **HELM Relay (`helm-relay/`)** — a minimal WebSocket relay that forwards messages between the paired phone and laptop so the phone can reach the laptop across networks (the laptop is behind home NAT). Keep it dumb: route messages, nothing more.
 
