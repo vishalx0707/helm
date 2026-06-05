@@ -64,55 +64,47 @@ img { display: block; max-width: 100%; }
 }
 
 /* ══════════════════════════════════════════════
-   NAVIGATION — Floating Capsule (compact, centered)
+   NAVIGATION — Floating Capsule
    ══════════════════════════════════════════════ */
 nav {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 100;
-  padding: 16px 24px;
+  padding: 18px 24px;
   display: flex;
   justify-content: center;
   pointer-events: none;
   transition: padding 0.5s var(--ease);
 }
 nav.scrolled {
-  padding: 10px 24px;
+  padding: 12px 24px;
 }
 
 .nav-inner {
   pointer-events: auto;
-  /* auto width — shrinks to fit content, no empty gap */
-  display: inline-flex;
+  width: 100%;
+  max-width: 900px;
+  display: flex;
   align-items: center;
-  gap: 4px;
-  padding: 8px 8px 8px 16px;
+  justify-content: space-between;
+  padding: 8px 8px 8px 20px;
   border-radius: 999px;
-  background: rgba(13, 14, 18, 0.75);
+  background: rgba(13, 14, 18, 0.78);
   backdrop-filter: blur(28px) saturate(1.6);
   -webkit-backdrop-filter: blur(28px) saturate(1.6);
-  border: 1px solid rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.11);
   box-shadow:
-    0 2px 20px rgba(0,0,0,0.5),
+    0 2px 20px rgba(0,0,0,0.55),
     inset 0 1px 0 rgba(255,255,255,0.06);
   transition: all 0.4s var(--ease);
 }
 nav.scrolled .nav-inner {
-  background: rgba(13, 14, 18, 0.92);
+  background: rgba(13, 14, 18, 0.94);
   box-shadow:
-    0 4px 28px rgba(0,0,0,0.7),
+    0 6px 30px rgba(0,0,0,0.7),
     inset 0 1px 0 rgba(255,255,255,0.07);
   border-color: var(--border2);
-  padding: 6px 6px 6px 14px;
-}
-
-/* Divider between logo and links */
-.nav-divider {
-  width: 1px;
-  height: 18px;
-  background: rgba(255,255,255,0.1);
-  margin: 0 8px;
-  flex-shrink: 0;
+  padding: 6px 6px 6px 18px;
 }
 
 .logo {
