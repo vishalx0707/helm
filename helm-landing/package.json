@@ -1,0 +1,10 @@
+{
+  "name": "helm-landing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "HELM Marketing Landing Page",
+  "scripts": {
+    "start": "npx http-server . -p 8080",
+    "dev": "npx http-server . -p 8080"
+  }
+}

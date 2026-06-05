@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HELM — Your laptop is the cloud.</title>
+  <meta name="description" content="Direct AI coding agents on your laptop, from your phone. No cloud. Ever.">
+  <!-- Reveal animations are gated behind this class so content is always visible if JS never runs. -->
+  <script>document.documentElement.classList.add('js');</script>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='25' fill='%23FFFFFF'/%3E%3Ctext x='50' y='65' font-family='monospace' font-weight='bold' font-size='45' fill='%230A0A0B' text-anchor='middle'%3E%26gt;_%3C/text%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <nav id="main-nav">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <div class="logo-mark">>_</div>
+        <span>HELM</span>
+      </a>
+      <div class="nav-links">
+        <a href="#how">How it works</a>
+        <a href="#product">Product</a>
+        <a href="https://github.com/vishalx0707/helm" target="_blank" rel="noopener">GitHub</a>
+        <a href="#download" class="nav-cta">Download</a>
+      </div>
+      <button class="burger" id="burger" aria-label="Menu">
+        <span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Mobile menu -->
+  <div class="mobile-menu" id="mobile-menu">
+    <a href="#how" onclick="closeMobile()">How it works</a>
+    <a href="#product" onclick="closeMobile()">Product</a>
+    <a href="https://github.com/vishalx0707/helm" target="_blank" rel="noopener" onclick="closeMobile()">GitHub</a>
+    <a href="#download" class="nav-cta" onclick="closeMobile()">Download</a>
+  </div>
+
+  <!-- ═══════════════ HERO ═══════════════ -->
+  <section class="hero">
+    <div class="hero-bg-glow"></div>
+    <!-- Floating grid lines -->
+    <div class="hero-grid-lines" aria-hidden="true">
+      <div class="grid-line gl-1"></div>
+      <div class="grid-line gl-2"></div>
+      <div class="grid-line gl-3"></div>
+      <div class="grid-line gl-4"></div>
+      <div class="grid-line gl-5"></div>
+    </div>
+    <div class="wrap hero-wrap">
+      <div class="hero-text">
+        <p class="eyebrow anim-in">local first · zero cloud</p>
+        <h1 class="anim-in d1">
+          Why <em>cloud</em><br>when you have<br>your laptop?
+        </h1>
+        <p class="hero-sub anim-in d2">
+          AI coding agents on your machine.<br>
+          Controlled from your phone.
+        </p>
+        <div class="hero-actions anim-in d3">
+          <a href="#download" class="btn-main" id="hero-dl-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m5 10 7 7 7-7"/><path d="M19 21H5"/></svg>
+            Download for macOS
+          </a>
+          <a href="https://github.com/vishalx0707/helm" class="btn-ghost" target="_blank" rel="noopener">
+            View source →
+          </a>
+        </div>
+        <div class="trust-row anim-in d4">
+          <div class="pulse"></div>
+          <span>Claude Code · Codex · Antigravity</span>
+        </div>
+      </div>
+
+      <div class="hero-visual anim-in d3">
+        <div class="phone-shell">
+          <div class="phone-screen">
+            <!-- Status bar -->
+            <div class="ph-status">
+              <span id="ph-time">10:42</span>
+              <div class="ph-dots"><i></i><i></i><i></i></div>
+            </div>
+            <!-- App chrome -->
+            <div class="ph-chrome">
+              <div class="ph-chrome-left">
+                <div class="ph-icon">>_</div>
+                <span>helm-relay / <b>main</b></span>
+              </div>
+              <div class="ph-badge"><div class="pulse sm"></div>Running</div>
+            </div>
+            <!-- Chat area -->
+            <div class="ph-body" id="ph-body">
+              <div class="ph-agent-tag"><i>C</i> CLAUDE CODE</div>
+              <div class="ph-bubble">
+                <div class="ph-bubble-label">TASK</div>
+                <div id="typed-task"></div>
+              </div>
+              <div class="ph-console" id="ph-console">
+                <div class="ph-console-head">
+                  <span>Terminal</span>
+                  <span id="ph-status-text">WAITING</span>
+                </div>
+                <div class="ph-console-lines" id="ph-lines"></div>
+              </div>
+            </div>
+            <!-- Input bar -->
+            <div class="ph-input">
+              <span id="ph-input-label">Enter task for agent...</span>
+              <div class="ph-send">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Scroll indicator -->
+    <div class="scroll-hint anim-in d4" aria-hidden="true">
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ MANIFESTO ═══════════════ -->
+  <section class="manifesto">
+    <div class="wrap">
+      <h2 class="manifesto-line anim-in">
+        Your code stays on <em>your</em> machine.
+      </h2>
+      <div class="manifesto-cols">
+        <div class="m-col anim-in d1">
+          <span class="m-num">01</span>
+          <h3>Your keys. Your repos.</h3>
+          <p>Everything stays local. No remote checkout.</p>
+        </div>
+        <div class="m-col anim-in d2">
+          <span class="m-num">02</span>
+          <h3>Phone as remote.</h3>
+          <p>Deploy agents, stream logs, approve changes.</p>
+        </div>
+        <div class="m-col anim-in d3">
+          <span class="m-num">03</span>
+          <h3>Zero persistence.</h3>
+          <p>Stateless relay. No database. Full TLS.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
+  <section class="how" id="how">
+    <div class="wrap how-grid">
+      <div class="how-intro">
+        <p class="label anim-in">how it works</p>
+        <h2 class="sec-title anim-in d1">Three taps.<br>That's it.</h2>
+        <p class="sec-sub anim-in d2">Pair once, then drive your laptop from your pocket.</p>
+      </div>
+
+      <div class="flow">
+        <div class="flow-step anim-in">
+          <div class="flow-num">1</div>
+          <div class="flow-content">
+            <h3>Pick a project & agent</h3>
+            <p>Choose a workspace and agent — Claude Code, Codex, or Antigravity.</p>
+          </div>
+        </div>
+        <div class="flow-line anim-in d1"></div>
+        <div class="flow-step anim-in d1">
+          <div class="flow-num">2</div>
+          <div class="flow-content">
+            <h3>Describe the task</h3>
+            <p>Your prompt relays securely to your local machine.</p>
+          </div>
+        </div>
+        <div class="flow-line anim-in d2"></div>
+        <div class="flow-step anim-in d2">
+          <div class="flow-num">3</div>
+          <div class="flow-content">
+            <h3>Watch it happen</h3>
+            <p>Terminal streams live. Review diffs, push commits — from your pocket.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ PRODUCT ═══════════════ -->
+  <section class="product" id="product">
+    <div class="wrap">
+      <p class="label anim-in">the ecosystem</p>
+      <h2 class="sec-title anim-in d1">Desktop daemon.<br>Mobile remote.</h2>
+
+      <div class="cards">
+        <div class="card card-wide anim-in">
+          <div class="card-inner">
+            <div class="card-label">DESKTOP</div>
+            <h3>HELM Daemon</h3>
+            <p>System tray app. Spawns shells, streams output, prevents sleep during compilation.</p>
+            <div class="card-tech">
+              <span>Electron</span><span>Node.js</span><span>WebSocket</span>
+            </div>
+          </div>
+          <!-- Inline diagram for the wide card -->
+          <div class="card-visual" aria-hidden="true">
+            <div class="card-terminal">
+              <div class="ct-bar"><span></span><span></span><span></span></div>
+              <div class="ct-lines">
+                <div class="ct-line ct-dim">$ helm daemon start</div>
+                <div class="ct-line ct-ok">listening on :4242</div>
+                <div class="ct-line ct-ok">paired with iPhone 15 Pro</div>
+                <div class="ct-line ct-cursor">_</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card anim-in d1">
+          <div class="card-label">MOBILE</div>
+          <h3>HELM Remote</h3>
+          <p>Keys in native secure keychains. Full terminal streaming.</p>
+          <div class="card-tech">
+            <span>React Native</span><span>Expo</span>
+          </div>
+        </div>
+        <div class="card anim-in d2">
+          <div class="card-label">RELAY</div>
+          <h3>Stateless Router</h3>
+          <p>TLS 1.3 WebSocket. Zero storage. Sessions die on close.</p>
+          <div class="card-tech">
+            <span>TLS 1.3</span><span>Stateless</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ SECURITY / TRUST ═══════════════ -->
+  <section class="arch">
+    <div class="wrap arch-full">
+      <div class="arch-header anim-in">
+        <p class="label">trust architecture</p>
+        <h2 class="sec-title">Your code never leaves.</h2>
+      </div>
+      <div class="arch-diagram-full anim-in d1">
+        <svg viewBox="0 0 800 200" class="diagram-svg-full" aria-label="Architecture diagram showing laptop connecting through stateless relay to phone">
+          <!-- Dashed connection -->
+          <line x1="120" y1="100" x2="680" y2="100" stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="8 6"/>
+          <!-- Animated packets -->
+          <circle class="packet-dot" r="3" fill="#fff" opacity="0.9">
+            <animateMotion dur="2.5s" repeatCount="indefinite" path="M 120 100 L 680 100"/>
+          </circle>
+          <circle class="packet-dot" r="2" fill="#fff" opacity="0.4">
+            <animateMotion dur="2.5s" begin="1.25s" repeatCount="indefinite" path="M 680 100 L 120 100"/>
+          </circle>
+          <!-- Laptop -->
+          <circle cx="120" cy="100" r="6" fill="#fff"/>
+          <text x="120" y="70" fill="var(--text)" font-family="Inter, sans-serif" font-weight="600" font-size="12" text-anchor="middle">LAPTOP</text>
+          <text x="120" y="135" fill="var(--text3)" font-family="monospace" font-size="9" text-anchor="middle">PORT 4242</text>
+          <!-- Relay -->
+          <circle cx="400" cy="100" r="32" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+          <circle cx="400" cy="100" r="48" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4 4">
+            <animateTransform attributeName="transform" type="rotate" from="0 400 100" to="360 400 100" dur="20s" repeatCount="indefinite"/>
+          </circle>
+          <text x="400" y="97" fill="var(--text)" font-family="monospace" font-size="9" font-weight="600" text-anchor="middle">RELAY</text>
+          <text x="400" y="110" fill="var(--text3)" font-family="monospace" font-size="7" text-anchor="middle">STATELESS</text>
+          <!-- Phone -->
+          <circle cx="680" cy="100" r="6" fill="#fff"/>
+          <text x="680" y="70" fill="var(--text)" font-family="Inter, sans-serif" font-weight="600" font-size="12" text-anchor="middle">PHONE</text>
+          <text x="680" y="135" fill="var(--text3)" font-family="monospace" font-size="9" text-anchor="middle">TLS 1.3</text>
+          <!-- Encryption badges -->
+          <rect x="220" y="84" width="48" height="16" rx="4" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+          <text x="244" y="95" fill="var(--text3)" font-family="monospace" font-size="7" text-anchor="middle">E2E</text>
+          <rect x="532" y="84" width="48" height="16" rx="4" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+          <text x="556" y="95" fill="var(--text3)" font-family="monospace" font-size="7" text-anchor="middle">E2E</text>
+        </svg>
+      </div>
+      <div class="arch-footnotes anim-in d2">
+        <div class="arch-note">
+          <span class="arch-note-label">zero storage</span>
+          <span>Session tables delete on close</span>
+        </div>
+        <div class="arch-note">
+          <span class="arch-note-label">zero credentials</span>
+          <span>Keys never leave your device</span>
+        </div>
+        <div class="arch-note">
+          <span class="arch-note-label">zero source code</span>
+          <span>Only encrypted diffs in transit</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ CTA ═══════════════ -->
+  <section class="cta" id="download">
+    <div class="cta-glow" aria-hidden="true"></div>
+    <div class="wrap cta-inner">
+      <h2 class="cta-title anim-in">
+        Your laptop is powerful.<br><em>Use it.</em>
+      </h2>
+      <div class="cta-actions anim-in d1">
+        <a href="#" class="btn-main" id="cta-dl-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17V3"/><path d="m5 10 7 7 7-7"/><path d="M19 21H5"/></svg>
+          Download for macOS
+        </a>
+        <a href="https://github.com/vishalx0707/helm" class="btn-ghost" target="_blank" rel="noopener">
+          Star on GitHub
+        </a>
+      </div>
+      <p class="cta-plat anim-in d2">macOS (Apple Silicon / Intel) · Linux (AppImage) · Windows</p>
+    </div>
+  </section>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer>
+    <div class="wrap footer-inner">
+      <div class="footer-top">
+        <div class="footer-brand">
+          <a href="#" class="logo sm">
+            <div class="logo-mark sm">>_</div>
+            <span>HELM</span>
+          </a>
+          <p>Your laptop is the cloud.</p>
+        </div>
+        <div class="footer-links">
+          <div class="footer-col">
+            <span class="footer-heading">Product</span>
+            <a href="#download">Download</a>
+            <a href="#how">How it works</a>
+          </div>
+          <div class="footer-col">
+            <span class="footer-heading">Resources</span>
+            <a href="https://github.com/vishalx0707/helm" target="_blank" rel="noopener">GitHub</a>
+            <a href="#">Docs</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 HELM. Your machine. Not theirs.</span>
+        <a href="https://github.com/vishalx0707/helm" target="_blank" rel="noopener">GitHub ↗</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
